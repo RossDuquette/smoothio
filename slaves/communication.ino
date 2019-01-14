@@ -25,7 +25,7 @@ void setup() {
 
 void loop() {
   delay(100);
-} // end loop
+}
 
 // callback for received data
 void receiveData(int byteCount) {
@@ -36,11 +36,9 @@ void receiveData(int byteCount) {
   }
   number[i] = '\0';
   Serial.print(number);
-}  // end while
+}
 
 // callback for sending data
 void sendData() {
   Wire.write(number);
 }
-
-//End of the program
