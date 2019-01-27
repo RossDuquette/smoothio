@@ -1,5 +1,4 @@
-/********************************************************
-                      SMOOTHIO
+/******************************************************** SMOOTHIO
  List of configuration parameters for the blending unit
 ********************************************************/
 
@@ -37,3 +36,10 @@
 #define ADD_A14 A14
 #define ADD_A13 A13
 #define ADD_A12 A12
+
+// Directions
+#define NEUTRAL 0
+#define CW 1
+#define CCW 2
+#define UP 3
+#define DOWN 4
