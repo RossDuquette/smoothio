@@ -42,7 +42,17 @@ void receiveData(int byteCount)
 // callback for sending data
 void sendData()
 {
+    blend();
     Wire.write(19)
+}
+
+bool blend(int *args)
+{
+    return true;
+}
+
+bool run_blend_motor()
+{
 }
 
 bool calibrate_vertical()
@@ -55,12 +65,4 @@ bool calibrate_yaw()
 
 bool move_to_position()
 {
-}
-
-bool blend(int *args)
-{
-
-    // move_to_position(sealed)
-    //
-    return true;
 }
