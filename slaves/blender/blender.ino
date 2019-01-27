@@ -10,16 +10,46 @@ char number[50];
 uint32_t elev_position = 0;
 uint32_t pivot_position = 0;
 
-// Code Initialization
 void setup()
 {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
 
+    // pin setup
+    pin_setup();
+
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
+}
+
+bool pin_setup()
+{
+    // Limit sense
+    pinMode(PIVOT_ENC_A, INPUT);
+    pinMode(PIVOT_ENC_B, INPUT);
+    pinMode(ELEV_ENC_A, INPUT);
+    pinMode(ELEV_ENC_B, INPUT);
+    pinMode(LIMIT_SENSE, INPUT);
+    pinMode(LIMIT_SENSE_2, INPUT);
+
+    // Outputs
+    pinMode(PIVOT_PWM, OUTPUT);
+    pinMode(PIVOT_IN_A, OUTPUT);
+    pinMode(PIVOT_IN_B, OUTPUT);
+
+    pinMode(ELEV_PWM, OUTPUT);
+    pinMode(ELEV_IN_A, OUTPUT);
+    pinMode(ELEV_IN_B, OUTPUT);
+
+    pinMode(BLEND_EN_0, OUTPUT);
+    pinMode(BLEND_EN_1, OUTPUT);
+
+    pinMode(ADD_D25, OUTPUT);
+    pinMode(ADD_D24, OUTPUT);
+    pinMode(ADD_D23, OUTPUT);
+    pinMode(ADD_D22, OUTPUT);
 
     // ISR for encoders
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_A), elev_enc_isr_A, RISING);
@@ -50,9 +80,24 @@ void sendData()
     Wire.write(19);
 }
 
+/*******************************************
+ LIMIT_SENSE: Limit switch for elev
+ LIMIT_SENSE_2: Limit switch for pivot 
+********************************************/
+bool elev_limit()
+{
+    return digitalRead(LIMIT_SENSE);
+}
+
+bool pivot_limit()
+{
+    return digitalRead(LIMIT_SENSE_2);
+}
+
 bool blender_control(uint8_t blender_pin, uint8_t on)
 {
     digitalWrite(blender_pin, on);
+    return true;
 }
 
 /*******************************************
@@ -123,7 +168,7 @@ bool rotate_pivot(uint8_t dir, uint8_t speed)
  ELEV_ENC_A: Value of encoder A
  ELEV_ENC_B: Value of encoder B
 ********************************************/
-bool elev_enc_isr_A()
+void elev_enc_isr_A()
 {
     if (digitalRead(ELEV_ENC_B) == HIGH)
     {
@@ -135,7 +180,7 @@ bool elev_enc_isr_A()
     }
 }
 
-bool elev_enc_isr_B()
+void elev_enc_isr_B()
 {
     if (digitalRead(ELEV_ENC_A) == HIGH)
     {
@@ -151,7 +196,7 @@ bool elev_enc_isr_B()
  PIVOT_ENC_A: Value of encoder A
  PIVOT_ENC_B: Value of encoder B
 ********************************************/
-bool pivot_enc_isr_A()
+void pivot_enc_isr_A()
 {
     if (digitalRead(PIVOT_ENC_B) == HIGH)
     {
@@ -163,7 +208,7 @@ bool pivot_enc_isr_A()
     }
 }
 
-bool pivot_enc_isr_B()
+void pivot_enc_isr_B()
 {
     if (digitalRead(PIVOT_ENC_A) == HIGH)
     {
@@ -175,18 +220,10 @@ bool pivot_enc_isr_B()
     }
 }
 
-bool run_blend_motor()
+bool calibrate_elev()
 {
 }
 
-bool calibrate_vertical()
-{
-}
-
-bool calibrate_yaw()
-{
-}
-
-bool move_to_position()
+bool calibrate_pivot()
 {
 }
