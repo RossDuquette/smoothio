@@ -14,23 +14,27 @@ char number[50];
 int state = 0;
 
 //Code Initialization
-void setup() {
+void setup()
+{
   // initialize i2c as slave
   Serial.begin(9600);
   Wire.begin(SLAVE_ADDRESS);
   // define callbacks for i2c communication
   Wire.onReceive(receiveData);
-  //  Wire.onRequest(sendData);
+  Wire.onRequest(sendData);
 }
 
-void loop() {
+void loop()
+{
   delay(100);
 }
 
 // callback for received data
-void receiveData(int byteCount) {
+void receiveData(int byteCount)
+{
   int i = 0;
-  while (Wire.available()) {
+  while (Wire.available())
+  {
     number[i] = Wire.read();
     i++;
   }
@@ -39,6 +43,7 @@ void receiveData(int byteCount) {
 }
 
 // callback for sending data
-void sendData() {
-  Wire.write(number);
+void sendData()
+{
+  Wire.write(19);
 }
