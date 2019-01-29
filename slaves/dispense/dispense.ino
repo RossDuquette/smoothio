@@ -9,7 +9,8 @@
 
 char number[50];
 
-void setup() {
+void setup() 
+{
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
@@ -22,7 +23,8 @@ void setup() {
     Wire.onRequest(sendData);
 }
 
-bool pin_setup() {
+bool pin_setup() 
+{
     // Inputs
     pinMode(THERMISTOR1, INPUT);
     pinMode(THERMISTOR0, INPUT);
@@ -53,10 +55,14 @@ bool pin_setup() {
     pinMode(ADD_D22, OUTPUT);
 }
 
-void loop() { delay(100); }
+void loop() 
+{ 
+    delay(100); 
+}
 
 // callback for received data
-void receiveData(int byteCount) {
+void receiveData(int byteCount) 
+{
     int i = 0;
     while (Wire.available()) {
         number[i] = Wire.read();
@@ -67,4 +73,26 @@ void receiveData(int byteCount) {
 }
 
 // callback for sending data
-void sendData() { Wire.write(19); }
+void sendData() 
+{ 
+    Wire.write(19); 
+}
+
+
+
+// Peripheral functions
+bool food_dispense(uint8_t pin, uint8_t on) \
+{
+    digitalWrite(pin, on);
+    return true;
+}
+
+bool cup_dispense() 
+{ 
+    return true; 
+}
+
+bool read_temp(uint8_t pin, float* value) 
+{ 
+    return true; 
+}
