@@ -10,6 +10,13 @@ Prototypes for peripheral control functions
 bool food_dispense(uint8_t pin, uint8_t on);
 
 /**
+* Configures stepper driver
+* Sets number of microsteps per full step
+* Must be a power of 2; 1 <= steps <= 32
+**/
+bool stepper_init(uint8_t microsteps);
+
+/**
 * Dispenses 1 cup
 **/
 bool cup_dispense();
