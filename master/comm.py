@@ -11,19 +11,21 @@ import time
 # for RPI version 1, use "bus = smbus.SMBus(0)"
 bus = smbus.SMBus(1)
 
-# This is the address we setup in the Arduino Program
-# Slave Address 1
-address = 0x04
 
-
-def writeNumber(value):
+def writeNumber(address, value):
     bus.write_byte(address, value)
     return -1
 
 
-def readNumber():
+def readByte(address):
     number = bus.read_byte_data(address, 1)
     return number
+
+
+def read(address):
+
+
+def write_
 
 
 while True:
