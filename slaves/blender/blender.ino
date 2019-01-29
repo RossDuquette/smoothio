@@ -10,8 +10,7 @@ char number[50];
 uint32_t elev_position = 0;
 uint32_t pivot_position = 0;
 
-void setup()
-{
+void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
@@ -24,8 +23,7 @@ void setup()
     Wire.onRequest(sendData);
 }
 
-bool pin_setup()
-{
+bool pin_setup() {
     // Limit sense
     pinMode(PIVOT_ENC_A, INPUT);
     pinMode(PIVOT_ENC_B, INPUT);
@@ -56,17 +54,12 @@ bool pin_setup()
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_B), elev_enc_isr_B, RISING);
 }
 
-void loop()
-{
-    delay(100);
-}
+void loop() { delay(100); }
 
 // callback for received data
-void receiveData(int byteCount)
-{
+void receiveData(int byteCount) {
     int i = 0;
-    while (Wire.available())
-    {
+    while (Wire.available()) {
         number[i] = Wire.read();
         i++;
     }
@@ -75,27 +68,17 @@ void receiveData(int byteCount)
 }
 
 // callback for sending data
-void sendData()
-{
-    Wire.write(19);
-}
+void sendData() { Wire.write(19); }
 
 /*******************************************
  LIMIT_SENSE: Limit switch for elev
- LIMIT_SENSE_2: Limit switch for pivot 
+ LIMIT_SENSE_2: Limit switch for pivot
 ********************************************/
-bool elev_limit()
-{
-    return digitalRead(LIMIT_SENSE);
-}
+bool elev_limit() { return digitalRead(LIMIT_SENSE); }
 
-bool pivot_limit()
-{
-    return digitalRead(LIMIT_SENSE_2);
-}
+bool pivot_limit() { return digitalRead(LIMIT_SENSE_2); }
 
-bool blender_control(uint8_t blender_pin, uint8_t on)
-{
+bool blender_control(uint8_t blender_pin, uint8_t on) {
     digitalWrite(blender_pin, on);
     return true;
 }
@@ -105,28 +88,20 @@ bool blender_control(uint8_t blender_pin, uint8_t on)
  ELEV_IN_B: CCW input (High / Low)
  ELEV_PWM: Speed (Duty cycle)
 ********************************************/
-bool move_elevator(uint8_t dir, uint8_t speed)
-{
-    if (dir == NEUTRAL || speed == 0)
-    {
+bool move_elevator(uint8_t dir, uint8_t speed) {
+    if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, 0);
-    }
-    else if (dir == UP)
-    {
+    } else if (dir == UP) {
         digitalWrite(ELEV_IN_A, HIGH);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, 0);
-    }
-    else if (dir == DOWN)
-    {
+    } else if (dir == DOWN) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, HIGH);
         analogWrite(ELEV_PWM, speed);
-    }
-    else
-    {
+    } else {
         return false;
     }
     return true;
@@ -137,28 +112,20 @@ bool move_elevator(uint8_t dir, uint8_t speed)
  PIVOT_IN_B: CCW input (High / Low)
  PIVOR_PWM: Speed (Duty cycle)
 ********************************************/
-bool rotate_pivot(uint8_t dir, uint8_t speed)
-{
-    if (dir == NEUTRAL || speed == 0)
-    {
+bool rotate_pivot(uint8_t dir, uint8_t speed) {
+    if (dir == NEUTRAL || speed == 0) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, LOW);
         analogWrite(PIVOT_PWM, 0);
-    }
-    else if (dir == CW)
-    {
+    } else if (dir == CW) {
         digitalWrite(PIVOT_IN_A, HIGH);
         digitalWrite(PIVOT_IN_B, LOW);
         analogWrite(PIVOT_PWM, speed);
-    }
-    else if (dir == CCW)
-    {
+    } else if (dir == CCW) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, HIGH);
         analogWrite(PIVOT_PWM, speed);
-    }
-    else
-    {
+    } else {
         return false;
     }
     return true;
@@ -168,26 +135,18 @@ bool rotate_pivot(uint8_t dir, uint8_t speed)
  ELEV_ENC_A: Value of encoder A
  ELEV_ENC_B: Value of encoder B
 ********************************************/
-void elev_enc_isr_A()
-{
-    if (digitalRead(ELEV_ENC_B) == HIGH)
-    {
+void elev_enc_isr_A() {
+    if (digitalRead(ELEV_ENC_B) == HIGH) {
         elev_position++;
-    }
-    else
-    {
+    } else {
         elev_position--;
     }
 }
 
-void elev_enc_isr_B()
-{
-    if (digitalRead(ELEV_ENC_A) == HIGH)
-    {
+void elev_enc_isr_B() {
+    if (digitalRead(ELEV_ENC_A) == HIGH) {
         elev_position--;
-    }
-    else
-    {
+    } else {
         elev_position++;
     }
 }
@@ -196,34 +155,22 @@ void elev_enc_isr_B()
  PIVOT_ENC_A: Value of encoder A
  PIVOT_ENC_B: Value of encoder B
 ********************************************/
-void pivot_enc_isr_A()
-{
-    if (digitalRead(PIVOT_ENC_B) == HIGH)
-    {
+void pivot_enc_isr_A() {
+    if (digitalRead(PIVOT_ENC_B) == HIGH) {
         pivot_position++;
-    }
-    else
-    {
+    } else {
         pivot_position--;
     }
 }
 
-void pivot_enc_isr_B()
-{
-    if (digitalRead(PIVOT_ENC_A) == HIGH)
-    {
+void pivot_enc_isr_B() {
+    if (digitalRead(PIVOT_ENC_A) == HIGH) {
         pivot_position--;
-    }
-    else
-    {
+    } else {
         pivot_position++;
     }
 }
 
-bool calibrate_elev()
-{
-}
+bool calibrate_elev() {}
 
-bool calibrate_pivot()
-{
-}
+bool calibrate_pivot() {}
