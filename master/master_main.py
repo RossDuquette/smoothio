@@ -1,7 +1,8 @@
 # from gpiozero import LED
 import argparse
 import subsys_test as tst
-from time import sleep
+import smbus
+import time
 from enum import Enum
 
 
@@ -36,9 +37,18 @@ def run(args):
     print args
     if args.t != None:
         test(args.t, args.f)
-    # led = LED(19)
-    # while True:
-    #     led.on()
+    else:
+        led = LED(19)
+        led.on()
+        while True:
+            # Receives the data from the User
+            data = raw_input("Enter a command: ")
+            data_list = list(data)
+            for i in data_list:
+                # Sends to the Slaves
+                writeNumber(int(ord(i)))
+                time.sleep(.1)
+            writeNumber(int(0x0A))
 
 
 if __name__ == '__main__':
