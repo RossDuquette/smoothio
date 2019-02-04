@@ -10,10 +10,9 @@
 #define FINISHED_COMMAND 0x01
 
 // Pin Layout
-#define CAR_DIR 12
-#define CAR_STEP 13
-
-#define EN 33
+#define DIR 12
+#define STEP 13
+#define nEN 33 
 #define M2 32
 #define M1 31
 #define M0 30

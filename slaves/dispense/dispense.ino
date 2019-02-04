@@ -7,6 +7,7 @@
 #include "config.h"
 #include "peripherals.h"
 
+DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
 char number[50];
 
 void setup() {
@@ -17,8 +18,8 @@ void setup() {
     // pin setup
     pin_setup();
 
-    // Set stepper mode
-    stepper_init(1);  // Full steps
+    // Initialize stepper motor driver
+    stepper_init();
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
@@ -72,7 +73,7 @@ void receiveData(int byteCount) {
 // callback for sending data
 void sendData() { Wire.write(19); }
 
-/***********************
+/************************
  * Peripheral functions *
  ************************/
 bool food_dispense(uint8_t pin, uint8_t on) {
@@ -80,49 +81,16 @@ bool food_dispense(uint8_t pin, uint8_t on) {
     return true;
 }
 
-bool stepper_init(uint8_t microsteps) {
-    if (microsteps == 0) {
-        return false;
-    }
-    uint8_t mode = 0;
-    while ((microsteps & 0x01) == 0) {
-        mode++;
-        microsteps = microsteps >> 1;
-    }
-    digitalWrite(M2, (mode >> 2) & 0x01);
-    digitalWrite(M1, (mode >> 1) & 0x01);
-    digitalWrite(M0, (mode >> 0) & 0x01);
-    digitalWrite(nEN, HIGH);
-    digitalWrite(DIR, HIGH);
-    digitalWrite(STEP, LOW);
+bool stepper_init() {
+    stepper.begin(RPM);
+    stepper.setEnableActiveState(LOW);
+    stepper.enable();
+    stepper.setMicrostep(MICROSTEPS);
     return true;
 }
 
 bool cup_dispense() {
-    const float STEPS = 200 / 6.0;
-    digitalWrite(nEN, LOW);
-
-    // Delay to make sure driver is enabled before sending pulses
-    uint8_t mode = 0, microsteps = 1;
-    mode |= digitalRead(M2) << 2;
-    mode |= digitalRead(M1) << 1;
-    mode |= digitalRead(M0);
-    while (mode != 0) {
-        microsteps = microsteps << 1;
-        mode--;
-    }
-    microsteps = max(microsteps, 32);
-
-    // Send pulses
-    uint8_t num_steps = 0, total_steps = ceil(STEPS * microsteps);
-    while (num_steps < total_steps) {
-        digitalWrite(STEP, HIGH);
-        digitalWrite(STEP, LOW);
-        num_steps++;
-    }
-
-    // Disable driver
-    digitalWrite(nEN, HIGH);
+    stepper.rotate(60); // 360 degrees / 6
     return true;
 }
 

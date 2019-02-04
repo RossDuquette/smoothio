@@ -5,6 +5,10 @@
 
 #include <Wire.h>
 #include "config.h"
+#include "peripherals.h"
+
+DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
+char number[50];
 
 void setup() {
     // initialize i2c as slave
@@ -36,3 +40,28 @@ void receiveData(int byteCount) {
 
 // callback for sending data
 void sendData() { Wire.write(19); }
+
+/************************
+ * Peripheral functions *
+ ************************/
+
+bool stepper_init(uint8_t microsteps) {
+    stepper.begin(RPM);
+    stepper.setEnableActiveState(LOW);
+    stepper.enable();
+    /*
+    * Microstepping mode: 1, 2, 4, 8, 16 or 32
+    * Mode 1 is full speed.
+    * Mode 32 is 32 microsteps per step.
+    * The motor should rotate just as fast (at the set RPM) 
+    */
+    stepper.setMicrostep(16);
+    return true;
+}
+
+bool carousel_home() { return true; }
+
+bool carousel_rotate() {
+    stepper.rotate(72); // 360 degrees / 5
+    return true;
+}
