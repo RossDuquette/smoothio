@@ -21,13 +21,6 @@ def readByte(address):
     number = bus.read_byte_data(address, 1)
     return number
 
-
-def read(address):
-
-
-def write_
-
-
 while True:
     # Receives the data from the User
     data = raw_input("Enter the data to be sent : ")

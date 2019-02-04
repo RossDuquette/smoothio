@@ -1,55 +1,37 @@
-# from gpiozero import LED
-import argparse
-import subsys_test as tst
+######################
+# Main functionality #
+######################
+
 import smbus
-import time
-from enum import Enum
+import module.module_def as mods
 
+# I2C channel 1 is connected to the GPIO pins
+channel = 1
 
-class Subsystems:
-    BLENDER_MOTOR = 'blender_motor'
-    BLENDER_ELEVATOR = 'blender_elevator'
-    BLENDER_PIVOT = 'blender_pivot'
+# Register addresses (with "normal mode" power-down bits)
+reg_write_dac = 0x40
 
+# Initialize I2C (SMBus)
+bus = smbus.SMBus(channel)
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-t', help='name of the mudule to be tested', default=None)
-    parser.add_argument(
-        '-f', help='name of the function to be tested', default=None)
-    args = parser.parse_args()
-    run(args)
+    while True:
+        # Receives the data from the User
+        mod = input("Enter a module. (1: Blender 2: Carousel 3: Dispense)\n")
+        if mod == 1:
+            add = mods.Blender.BLENDER_ADD
+        elif mod == 2:
+            add = mods.Carousel.CAROUSEL_ADD
+        elif mod == 3:
+            add = mods.Dispense.DISPENSE_ADD
+        else:
+            print "Wrong input. Please try again"
+            continue
+        command = input("Enter the command (ie Blender, 1: move elevator +ve 2: rotate pivot +ve)\n")
 
-
-def test(ss, function):
-    test_selector = "{}_{}".format(ss, function)
-    print test_selector, Subsystems.BLENDER_MOTOR
-    if test_selector == Subsystems.BLENDER_MOTOR:
-        tst.blender_motor()
-    if test_selector == Subsystems.BLENDER_ELEVATOR:
-        tst.blender_elevator()
-    if test_selector == Subsystems.BLENDER_PIVOT:
-        tst.blender_pivot()
-
-
-def run(args):
-    print args
-    if args.t != None:
-        test(args.t, args.f)
-    else:
-        led = LED(19)
-        led.on()
-        while True:
-            # Receives the data from the User
-            data = raw_input("Enter a command: ")
-            data_list = list(data)
-            for i in data_list:
-                # Sends to the Slaves
-                writeNumber(int(ord(i)))
-                time.sleep(.1)
-            writeNumber(int(0x0A))
-
+        # Write out I2C command: address, reg_write_dac, msg[0], msg[1]
+        print "Sending command to node..."
+        bus.write_i2c_block_data(0x04, mod, [command])
 
 if __name__ == '__main__':
     main()

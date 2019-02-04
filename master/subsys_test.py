@@ -1,12 +1,12 @@
 from drivers.blender import Blender
 from drivers.carousel import Carousel
-from drivers.cup_dispense
-from drivers.ing_dispense
+from drivers.cup_dispense import CupDispense
+from drivers.ing_dispense import IngDispense
 
 
 def blender_motor():
-    print "testing blender motor
-    blender = blender()
+    print "testing blender motor"
+    blender = Blender()
     return
 
 

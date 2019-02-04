@@ -32,10 +32,12 @@ while True:
     data_list = list(data)
     for i in data_list:
         # Sends to the Slaves
+        print int(ord(i))
         writeNumber(int(ord(i)))
         time.sleep(.1)
 
     writeNumber(int(0x0A))
+    time.sleep(1)
     print readNumber()
 
 # End of the Script
