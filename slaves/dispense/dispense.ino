@@ -9,8 +9,7 @@
 
 char number[50];
 
-void setup() 
-{
+void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
@@ -19,15 +18,14 @@ void setup()
     pin_setup();
 
     // Set stepper mode
-    stepper_init(1); // Full steps
+    stepper_init(1);  // Full steps
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
 }
 
-bool pin_setup() 
-{
+bool pin_setup() {
     // Inputs
     pinMode(THERMISTOR1, INPUT);
     pinMode(THERMISTOR0, INPUT);
@@ -58,14 +56,10 @@ bool pin_setup()
     pinMode(ADD_D22, OUTPUT);
 }
 
-void loop() 
-{ 
-    delay(100); 
-}
+void loop() { delay(100); }
 
 // callback for received data
-void receiveData(int byteCount) 
-{
+void receiveData(int byteCount) {
     int i = 0;
     while (Wire.available()) {
         number[i] = Wire.read();
@@ -76,24 +70,17 @@ void receiveData(int byteCount)
 }
 
 // callback for sending data
-void sendData() 
-{ 
-    Wire.write(19); 
-}
+void sendData() { Wire.write(19); }
 
-
-
-/*********************** 
-* Peripheral functions *
-************************/
-bool food_dispense(uint8_t pin, uint8_t on) \
-{
+/***********************
+ * Peripheral functions *
+ ************************/
+bool food_dispense(uint8_t pin, uint8_t on) {
     digitalWrite(pin, on);
     return true;
 }
 
-bool stepper_init(uint8_t microsteps)
-{
+bool stepper_init(uint8_t microsteps) {
     if (microsteps == 0) {
         return false;
     }
@@ -102,33 +89,32 @@ bool stepper_init(uint8_t microsteps)
         mode++;
         microsteps = microsteps >> 1;
     }
-    digitalWrite(M2, (mode>>2) & 0x01);
-    digitalWrite(M1, (mode>>1) & 0x01);
-    digitalWrite(M0, (mode>>0) & 0x01);
+    digitalWrite(M2, (mode >> 2) & 0x01);
+    digitalWrite(M1, (mode >> 1) & 0x01);
+    digitalWrite(M0, (mode >> 0) & 0x01);
     digitalWrite(nEN, HIGH);
     digitalWrite(DIR, HIGH);
     digitalWrite(STEP, LOW);
     return true;
 }
 
-bool cup_dispense() 
-{
-    const float STEPS = 200/6.0;
+bool cup_dispense() {
+    const float STEPS = 200 / 6.0;
     digitalWrite(nEN, LOW);
 
     // Delay to make sure driver is enabled before sending pulses
     uint8_t mode = 0, microsteps = 1;
-    mode |= digitalRead(M2)<<2;
-    mode |= digitalRead(M1)<<1;
+    mode |= digitalRead(M2) << 2;
+    mode |= digitalRead(M1) << 1;
     mode |= digitalRead(M0);
     while (mode != 0) {
         microsteps = microsteps << 1;
         mode--;
     }
-    microsteps = max(microsteps,32);
+    microsteps = max(microsteps, 32);
 
     // Send pulses
-    uint8_t num_steps = 0, total_steps = ceil(STEPS*microsteps);
+    uint8_t num_steps = 0, total_steps = ceil(STEPS * microsteps);
     while (num_steps < total_steps) {
         digitalWrite(STEP, HIGH);
         digitalWrite(STEP, LOW);
@@ -137,10 +123,7 @@ bool cup_dispense()
 
     // Disable driver
     digitalWrite(nEN, HIGH);
-    return true; 
+    return true;
 }
 
-bool read_temp(uint8_t pin, float* value) 
-{ 
-    return true; 
-}
+bool read_temp(uint8_t pin, float* value) { return true; }
