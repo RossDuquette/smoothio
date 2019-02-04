@@ -22,6 +22,7 @@ void setup()
   // define callbacks for i2c communication
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
+  Serial.println("Serial init'd");
 }
 
 void loop()
@@ -30,16 +31,15 @@ void loop()
 }
 
 // callback for received data
-void receiveData(int byteCount)
-{
-  int i = 0;
-  while (Wire.available())
-  {
-    number[i] = Wire.read();
-    i++;
-  }
-  number[i] = '\0';
-  Serial.print(number);
+void receiveData(int byteCount){
+    int number;
+    Serial.print("byte count=");
+    Serial.println(byteCount);
+
+    while(Wire.available()) {
+        number = Wire.read();
+        Serial.println((int)number);
+     }
 }
 
 // callback for sending data

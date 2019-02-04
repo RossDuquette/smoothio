@@ -6,9 +6,23 @@
 #include <Wire.h>
 #include "config.h"
 
-char number[50];
 uint32_t elev_position = 0;
 uint32_t pivot_position = 0;
+
+typedef enum BState {
+    IDLEING,
+    DESCENDING,
+    ASCENDING,
+    PIVOTING_CW,
+    PIVOTING_CCW,
+    OSCILLATING,
+    SPIN_BLADE
+} BState;
+
+BState bstate1, bstate2, bstate_global;
+bstate1 = IDLE;
+bstate2 = IDLE;
+bstate_global = IDLE;
 
 void setup() {
     // initialize i2c as slave
@@ -54,21 +68,28 @@ bool pin_setup() {
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_B), elev_enc_isr_B, RISING);
 }
 
-void loop() { delay(100); }
+void loop() {
+    move_elevator(UP, 200);
+    delay(1000);
+    move_elevator(DOWN, 200);
+    delay(1000);
+    move_elevator(NEUTRAL, 0);
+    delay(1000);
+}
 
 // callback for received data
 void receiveData(int byteCount) {
     int i = 0;
-    while (Wire.available()) {
+    if (Wire.available()) {
         number[i] = Wire.read();
-        i++;
     }
-    number[i] = '\0';
-    Serial.print(number);
 }
 
 // callback for sending data
-void sendData() { Wire.write(19); }
+void sendData() {
+    int i = 0;
+    Wire.write(number[1]);
+}
 
 /*******************************************
  LIMIT_SENSE: Limit switch for elev
@@ -96,7 +117,7 @@ bool move_elevator(uint8_t dir, uint8_t speed) {
     } else if (dir == UP) {
         digitalWrite(ELEV_IN_A, HIGH);
         digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, 0);
+        analogWrite(ELEV_PWM, speed);
     } else if (dir == DOWN) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, HIGH);
