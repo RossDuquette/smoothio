@@ -10,12 +10,12 @@ uint32_t elev_position = 0;
 uint32_t pivot_position = 0;
 
 typedef enum BState {
-    IDLEING,
-    DESCENDING,
-    ASCENDING,
-    PIVOTING_CW,
-    PIVOTING_CCW,
-    OSCILLATING,
+    IDLE,
+    DESCEND,
+    ASCEND,
+    PIVOT_CW,
+    PIVOT_CCW,
+    OSCILLATE,
     SPIN_BLADE
 } BState;
 
@@ -95,9 +95,15 @@ void sendData() {
  LIMIT_SENSE: Limit switch for elev
  LIMIT_SENSE_2: Limit switch for pivot
 ********************************************/
-bool elev_limit() { return digitalRead(LIMIT_SENSE); }
+bool elev_limit() {
+    // Return reading of elevator limit switch
+    return digitalRead(LIMIT_SENSE);
+}
 
-bool pivot_limit() { return digitalRead(LIMIT_SENSE_2); }
+bool pivot_limit() {
+    // Return reading of pivot limit switch
+    return digitalRead(LIMIT_SENSE_2);
+}
 
 bool blender_control(uint8_t blender_pin, uint8_t on) {
     digitalWrite(blender_pin, on);

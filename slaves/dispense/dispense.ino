@@ -7,7 +7,9 @@
 #include "config.h"
 #include "peripherals.h"
 
-char number[50];
+typedef enum DState { LED1, LED2, LED3 } DState;
+
+DState dstate = IDLE;
 
 void setup() {
     // initialize i2c as slave
@@ -56,21 +58,49 @@ bool pin_setup() {
     pinMode(ADD_D22, OUTPUT);
 }
 
-void loop() { delay(100); }
+void loop() {
+    // cup_dispense();
+    // delay(100);
+    food_dispense(FROZEN1_EN, HIGH);
+    switch (dstate) {
+        case LED1:
+            digitalWrite(22, LOW);
+            digitalWrite(23, HIGH);
+            break;
+        case LED2:
+            digitalWrite(22, HIGH);
+            digitalWrite(23, LOW);
+            break;
+    };
+}
 
 // callback for received data
 void receiveData(int byteCount) {
-    int i = 0;
+    int number;
+    int idx = 0;
+    int data[2];
     while (Wire.available()) {
-        number[i] = Wire.read();
-        i++;
+        number = (int)Wire.read();
+        Serial.println(number);
+        data[idx] = number idx++;
     }
-    number[i] = '\0';
-    Serial.print(number);
+    switch (data[1]) {
+        case 1:
+            dstate = LED1;
+            break;
+        case 2:
+            dstate = LED2;
+            break;
+        case 3:
+            dstate = LED3;
+            break;
+    }
 }
 
-// callback for sending data
-void sendData() { Wire.write(19); }
+void sendData() {
+    // Polled by master
+    Wire.write(19);
+}
 
 /***********************
  * Peripheral functions *
