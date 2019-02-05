@@ -7,24 +7,31 @@
 #include "config.h"
 #include "peripherals.h"
 
-typedef enum DState { LED1, LED2, LED3 } DState;
-DState dstate = IDLE;
 DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
+typedef enum DState { IDLE, DISPENSE } DState;
+// States for each cup dispense +1  for the cup dispenser
+DState dstates[NUM_DISPENSE + 1];
 
 void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
 
-    // pin setup
+    // pin and state and servo setup
     pin_setup();
-
-    // Initialize stepper motor driver
+    state_setup();
     stepper_init();
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
+}
+
+bool state_setup() {
+    for (int i = 0; i < NUM_DISPENSE + 1; i++) {
+        dstates[i] = IDLE;
+    }
+    return true;
 }
 
 bool pin_setup() {
@@ -59,18 +66,32 @@ bool pin_setup() {
 }
 
 void loop() {
-    // cup_dispense();
-    // delay(100);
     food_dispense(FROZEN1_EN, HIGH);
-    switch (dstate) {
-        case LED1:
+    // Run state machines for each dispenser
+    for (int i = 0; i < NUM_DISPENSE; i++) {
+        switch (dstates[i]) {
+            case IDLE:
+                digitalWrite(22, LOW);
+                digitalWrite(23, LOW);
+                break;
+            case DISPENSE:
+                Serial.print("Dispenser ");
+                Serial.print(i);
+                Serial.println("Dispensing");
+                digitalWrite(22, HIGH);
+                digitalWrite(23, LOW);
+                break;
+        };
+    }
+    // Run state machine for cup dispenser
+    switch (dstates[NUM_DISPENSE]) {
+        case IDLE:
+            digitalWrite(22, LOW);
+            digitalWrite(23, LOW);
+        case DISPENSE:
+            Serial.println("Dispensing Cup");
             digitalWrite(22, LOW);
             digitalWrite(23, HIGH);
-            break;
-        case LED2:
-            digitalWrite(22, HIGH);
-            digitalWrite(23, LOW);
-            break;
     };
 }
 
@@ -82,17 +103,15 @@ void receiveData(int byteCount) {
     while (Wire.available()) {
         number = (int)Wire.read();
         Serial.println(number);
-        data[idx] = number idx++;
+        data[idx] = number;
+        idx++;
     }
     switch (data[1]) {
         case 1:
-            dstate = LED1;
+            dstates[data[0]] = IDLE;
             break;
         case 2:
-            dstate = LED2;
-            break;
-        case 3:
-            dstate = LED3;
+            dstates[data[0]] = DISPENSE;
             break;
     }
 }

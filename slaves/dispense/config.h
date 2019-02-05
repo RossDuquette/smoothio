@@ -2,6 +2,8 @@
                        SMOOTHIO
  List of configuration parameters for the dispense unit
 ********************************************************/
+// Configurations
+#define NUM_DISPENSE 0x05
 
 // Slave Address for the Communication
 #define SLAVE_ADDRESS 0x03
@@ -21,7 +23,7 @@
 
 #define DIR 12
 #define STEP 13
-#define nEN 33 
+#define nEN 33
 #define M2 32
 #define M1 31
 #define M0 30
