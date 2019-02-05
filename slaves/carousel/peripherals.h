@@ -18,23 +18,16 @@ Prototypes for peripheral control functions
 #define MICROSTEPS 16
 
 /**
-* Used to turn dispense motors on and off
-* pin defined as FROZEN1_EN -> LIQUID3_EN
-**/
-bool food_dispense(uint8_t pin, uint8_t on);
-
-/**
 * Initialize stepper motor driver
 **/
 bool stepper_init();
 
 /**
-* Dispenses 1 cup
+* Homes the carousel, runs during initialization
 **/
-bool cup_dispense();
+bool carousel_home();
 
 /**
-* Read thermistor value
-* Converts ADC value to temperature in Celsius, returned in value
+* Rotates the carousel exactly 1 station
 **/
-bool read_temp(uint8_t pin, float* value);
+bool carousel_rotate();
