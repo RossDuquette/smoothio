@@ -29,12 +29,15 @@ def print_lookup_table():
             0: Blender One
             1: Blender Two
             2: Pivot/Elevator
+            69: Read State
         Carousel:
             0: Rotate CW
             1: Rotate CCW
+            69: Read State
         Dispense:
             0-4: Dispenses 1-5
             5: Cup Dispense
+            69: Read State
 
         Data Segments
         -------------
@@ -62,7 +65,13 @@ def main():
         else:
             print "Wrong input. Please try again"
             continue
+
         head = input("Selector number: ")
+        if head == 69:
+            block = bus.read_i2c_block_data(add, 0, 20)
+            print ''.join(map(chr, block))
+            continue
+
         data = input("Data segment: ")
         # Write out I2C command: address, reg_write_dac, msg[0], msg[1]
         print """
