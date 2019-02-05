@@ -16,6 +16,7 @@ void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
+    Serial.println("Starting Dispense Node");
 
     // pin and state and servo setup
     pin_setup();
@@ -77,7 +78,7 @@ void loop() {
             case DISPENSE:
                 Serial.print("Dispenser ");
                 Serial.print(i);
-                Serial.println("Dispensing");
+                Serial.println(" Dispensing");
                 digitalWrite(22, HIGH);
                 digitalWrite(23, LOW);
                 break;
@@ -88,10 +89,12 @@ void loop() {
         case IDLE:
             digitalWrite(22, LOW);
             digitalWrite(23, LOW);
+            break;
         case DISPENSE:
-            Serial.println("Dispensing Cup");
+            Serial.println("Cup Dispenser Dispensing");
             digitalWrite(22, LOW);
             digitalWrite(23, HIGH);
+            break;
     };
 }
 
