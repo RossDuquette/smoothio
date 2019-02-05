@@ -27,11 +27,11 @@ def main():
         else:
             print "Wrong input. Please try again"
             continue
-        head = input("Enter a header (ie 1: dispense one, 2: dispense two, ..., 6: cup dispense")
-        data = input("Enter data to be sent (ie 1: idle, 2: dispense fruit, 3: dispense cup")
+        head = input("Enter a header (ie 1: dispense one, 2: dispense two, ..., 6: cup dispense\n")
+        data = input("Enter data to be sent (ie 1: idle, 2: dispense fruit, 3: dispense cup\n")
         # Write out I2C command: address, reg_write_dac, msg[0], msg[1]
         print "Sending command to node..."
-        bus.write_i2c_block_data(0x04, head, [data])
+        bus.write_i2c_block_data(add, head, [data])
 
 if __name__ == '__main__':
     main()
