@@ -9,13 +9,13 @@ class Blender:
     BLEND_SIGNAL = 0x02
 
 class Carousel:
-    CAROUSEL_ADD = 0x5
+    CAROUSEL_ADD = 0x05
 
     ABORT = 0x01
     ROTATE_SIGNAL = 0x02
 
 class Dispense:
-    DISPENSE_ADD = 0x03
+    DISPENSE_ADD = 0x06
 
     ABORT = 0x01
     DISPENSE_LIQUID = 0x02

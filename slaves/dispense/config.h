@@ -3,7 +3,7 @@
  List of configuration parameters for the dispense unit
 ********************************************************/
 // Configurations
-#define NUM_DISPENSE 0x05
+#define NUM_DISPENSE 0x06
 
 // Slave Address for the Communication
 #define SLAVE_ADDRESS 0x03
