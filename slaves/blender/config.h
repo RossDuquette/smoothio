@@ -9,7 +9,8 @@ typedef enum COMM_SELECTOR { // Decode message from master
     BLEND2,
     PIV,
     ELEV,
-    ROUT
+    ROUT,
+    RESET = 255
 } COMM_SELECTOR;
 
 typedef enum BLENDER { // Blender state

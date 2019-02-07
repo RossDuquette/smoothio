@@ -26,18 +26,46 @@ void setup() {
 
 void loop() {
     // Debug
-    digitalWrite(ADD_D24,LOW);
-    delay(1000);
-    digitalWrite(ADD_D24,HIGH);
-    delay(1000);
+    // digitalWrite(ADD_D24,LOW);
+    // delay(1000);
+    // digitalWrite(ADD_D24,HIGH);
+    // delay(1000);
+
+    // Output state machine
+
+    // Update sensor values
+
 }
 
 // callback for received data
 void receiveData(int byteCount) {
-    uint8_t i = 0;
-    uint8_t data[2];
-    while (Wire.available()) {
-        data[i++] = Wire.read();
+    if (Wire.available()) {
+        COMM_SELECTOR selector = (COMM_SELECTOR)Wire.read();
+        if (Wire.available()) {
+            uint8_t data = Wire.read();
+            switch (selector) {
+                case BLEND1:
+                    states.blender1 = (BLENDER)data;
+                    break;
+                case BLEND2:
+                    states.blender2 = (BLENDER)data;
+                    break;
+                case PIV:
+                    states.pivot = (PIVOT)data;
+                    break;
+                case ELEV:
+                    states.elevator = (ELEVATOR)data;
+                    break;
+                case ROUT:
+                    states.routine = (ROUTINE)data;
+                    break;
+                case RESET:
+                default:
+                    // Set all states to IDLE
+                    memset(&states, 0, sizeof(state_t));
+                    break;
+            }
+        }
     }
 }
 
