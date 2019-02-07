@@ -3,11 +3,59 @@
  List of configuration parameters for the blending unit
 ********************************************************/
 
+// Define enumerations
+typedef enum COMM_SELECTOR { // Decode message from master
+    BLEND1 = 1,
+    BLEND2,
+    PIV,
+    ELEV,
+    ROUT,
+    RESET = 255
+} COMM_SELECTOR;
+
+typedef enum BLENDER { // Blender state
+    B_IDLE = 0,
+    B_ON
+} BLENDER;
+
+typedef enum ELEVATOR { // Elevator state
+    E_IDLE = 0,
+    E_ASCEND,
+    E_DESCEND,
+    E_HOME
+} ELEVATOR;
+
+typedef enum PIVOT { // Pivot state
+    P_IDLE = 0,
+    P_CW,
+    P_CCW,
+    P_HOME
+} PIVOT;
+
+typedef enum ROUTINE { // Complex commands
+    R_IDLE = 0,
+    R_BLEND_AND_CLEAN,
+    R_CLEAN,
+    R_BLEND
+} ROUTINE;
+
+// State variables, for communication
+typedef struct state_t {
+    // Outputs
+    BLENDER blender1;
+    BLENDER blender2;
+    ELEVATOR elevator;
+    PIVOT pivot;
+    ROUTINE routine;
+    // Inputs
+    uint8_t pivot_deg;
+    uint8_t elevator_height; // in cm
+    uint8_t limit1;
+    uint8_t limit2;
+} state_t;
+
 // Slave Address for the Communication
 #define SLAVE_ADDRESS 0x04
-
-// List of I2C messages
-#define FINISHED_COMMAND 0x01
 
 // Pin layout
 #define PIVOT_PWM 4
@@ -44,3 +92,4 @@
 #define CCW 2
 #define UP 3
 #define DOWN 4
+

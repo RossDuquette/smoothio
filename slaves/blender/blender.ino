@@ -9,20 +9,7 @@
 uint32_t elev_position = 0;
 uint32_t pivot_position = 0;
 
-typedef enum BState {
-    IDLE,
-    DESCEND,
-    ASCEND,
-    PIVOT_CW,
-    PIVOT_CCW,
-    OSCILLATE,
-    SPIN_BLADE
-} BState;
-
-BState bstate1, bstate2, bstate_global;
-bstate1 = IDLE;
-bstate2 = IDLE;
-bstate_global = IDLE;
+state_t states;
 
 void setup() {
     // initialize i2c as slave
@@ -36,6 +23,57 @@ void setup() {
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
 }
+
+void loop() {
+    // Debug
+    // digitalWrite(ADD_D24,LOW);
+    // delay(1000);
+    // digitalWrite(ADD_D24,HIGH);
+    // delay(1000);
+
+    // Output state machine
+
+    // Update sensor values
+
+}
+
+// callback for received data
+void receiveData(int byteCount) {
+    if (Wire.available()) {
+        COMM_SELECTOR selector = (COMM_SELECTOR)Wire.read();
+        if (Wire.available()) {
+            uint8_t data = Wire.read();
+            switch (selector) {
+                case BLEND1:
+                    states.blender1 = (BLENDER)data;
+                    break;
+                case BLEND2:
+                    states.blender2 = (BLENDER)data;
+                    break;
+                case PIV:
+                    states.pivot = (PIVOT)data;
+                    break;
+                case ELEV:
+                    states.elevator = (ELEVATOR)data;
+                    break;
+                case ROUT:
+                    states.routine = (ROUTINE)data;
+                    break;
+                case RESET:
+                default:
+                    // Set all states to IDLE
+                    memset(&states, 0, sizeof(state_t));
+                    break;
+            }
+        }
+    }
+}
+
+// callback for sending data
+void sendData() {
+    Wire.write((const char*)&states, sizeof(state_t));
+}
+
 
 bool pin_setup() {
     // Limit sense
@@ -66,29 +104,6 @@ bool pin_setup() {
     // ISR for encoders
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_A), elev_enc_isr_A, RISING);
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_B), elev_enc_isr_B, RISING);
-}
-
-void loop() {
-    move_elevator(UP, 200);
-    delay(1000);
-    move_elevator(DOWN, 200);
-    delay(1000);
-    move_elevator(NEUTRAL, 0);
-    delay(1000);
-}
-
-// callback for received data
-void receiveData(int byteCount) {
-    int i = 0;
-    if (Wire.available()) {
-        number[i] = Wire.read();
-    }
-}
-
-// callback for sending data
-void sendData() {
-    int i = 0;
-    Wire.write(number[1]);
 }
 
 /*******************************************
@@ -201,3 +216,4 @@ void pivot_enc_isr_B() {
 bool calibrate_elev() {}
 
 bool calibrate_pivot() {}
+
