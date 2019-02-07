@@ -67,35 +67,36 @@ class Blender:
     # Selectors
     def print_selectors(self):
         print """
-            Selector Numbers
-            --------------
-            0: Read state
-            1: Blender 1
-            2: Blender 2
-            3: Pivot
-            4: Elevator
-            5: Routine
-            255: Reset
+        Selector Numbers
+        --------------
+        0: Read state
+        1: Blender 1
+        2: Blender 2
+        3: Pivot
+        4: Elevator
+        5: Routine
+        255: Reset
         """
 
     # Actions
     def print_actions(self, selector):
         print """
-            Actions
-            --------------
+        Actions
+        --------------
         """
         if selector == 1 or selector == 2:
             for key,val in self.blender_states.items():
-                print "{} : {}".format(key,val)
+                print "        {} : {}".format(key,val)
         elif selector == 3:
             for key,val in self.pivot_states.items():
-                print "{} : {}".format(key,val)
+                print "        {} : {}".format(key,val)
         elif selector == 4:
             for key,val in self.elevator_states.items():
-                print "{} : {}".format(key,val)
+                print "        {} : {}".format(key,val)
         elif selector == 5:
             for key,val in self.routine_states.items():
-                print "{} : {}".format(key,val)
+                print "        {} : {}".format(key,val)
+        print ""
 
 class Carousel:
     def __init__(self):
