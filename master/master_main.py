@@ -8,56 +8,34 @@ import module.module_def as mods
 # I2C channel 1 is connected to the GPIO pins
 channel = 1
 
-# Register addresses (with "normal mode" power-down bits)
-reg_write_dac = 0x40
-
 # Initialize I2C (SMBus)
 bus = smbus.SMBus(channel)
 
-def print_lookup_table():
+def print_modules():
     print """
         Module Numbers
         --------------
         Blender:  1
         Carousel: 2
         Dispense: 3
-
-        Selector Numbers
-        --------------
-        *NDR = No Data Required
-        Blender:
-            0: Blender One
-            1: Blender Two
-            2: Pivot/Elevator
-            69: Read State
-        Carousel:
-            0: Rotate CW
-            1: Rotate CCW
-            69: Read State
-        Dispense:
-            0-4: Dispenses 1-5
-            5: Cup Dispense
-            69: Read State
-
-        Data Segments
-        -------------
-        Blender:
-            1: Idle
-            2: Run Blender Motor
-        Carousel: 
-            N: Number of cups to rotate
-        Dispense:
-            1: Idle
-            2: Dispense
     """
 
 def main():
-    print_lookup_table()
+    Blender = mods.Blender()
+    Carousel = mods.Carousel()
+    Dispense = mods.Dispense()
     while True:
+        print_modules()
         # Receives the data from the User
-        uin = input("Module number (1: Blender 2: Carousel 3: Dispense): ")
+        uin = input("Select Module: ")
         if uin == 1:
-            add = mods.Blender.BLENDER_ADD
+            add = Blender.BLENDER_ADD
+            Blender.print_selectors()
+            selector = input("Selector number: ")
+            if selector == 0:
+                Blender.read_data(bus)
+            else:
+                Blender.print_actions(selector)
         elif uin == 2:
             add = mods.Carousel.CAROUSEL_ADD
         elif uin == 3:
@@ -66,20 +44,14 @@ def main():
             print "Wrong input. Please try again"
             continue
 
-        head = input("Selector number: ")
-        if head == 69:
-            block = bus.read_i2c_block_data(add, 0, 20)
-            print ''.join(map(chr, block))
-            continue
-
-        data = input("Data segment: ")
-        # Write out I2C command: address, reg_write_dac, msg[0], msg[1]
+        action = input("Action: ")
+        # Write out I2C command: address, msg[0], msg[1]
         print """
         ###########################
         # Sending command to node #
         ###########################
         """
-        bus.write_i2c_block_data(add, head, [data])
+        bus.write_i2c_block_data(add, selector, [action])
 
 if __name__ == '__main__':
     main()
