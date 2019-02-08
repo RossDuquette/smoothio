@@ -15,6 +15,7 @@ void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
+    Serial.println("Starting Blender Module");
 
     // pin setup
     pin_setup();
@@ -25,16 +26,66 @@ void setup() {
 }
 
 void loop() {
-    // Debug
-    // digitalWrite(ADD_D24,LOW);
-    // delay(1000);
-    // digitalWrite(ADD_D24,HIGH);
-    // delay(1000);
+    // Blender state machines
+    switch (states.blender1) {
+        case B_IDLE:
+            break;
+        case B_ON:
+            Serial.println("Blender 1 on");
+            break;
+    };
+    switch (states.blender2) {
+        case B_IDLE:
+            break;
+        case B_ON:
+            Serial.println("Blender 2 on");
+            break;
+    };
 
-    // Output state machine
+    // Pivot state machine
+    switch (states.pivot) {
+        case P_IDLE:
+            break;
+        case P_CW:
+            Serial.println("Turning CW");
+            break;
+        case P_CCW:
+            Serial.println("Turning blender CCW");
+            break;
+        case P_HOME:
+            Serial.println("Homing pivot");
+            break;
+    };
 
-    // Update sensor values
+    // Elevator state machine
+    switch (states.elevator) {
+        case E_IDLE:
+            break;
+        case E_ASCEND:
+            Serial.println("Ascending elevator");
+            break;
+        case E_DESCEND:
+            Serial.println("Descending elevator");
+            break;
+        case E_HOME:
+            Serial.println("Homing elevator");
+            break;
+    };
 
+    // Routine state machine
+    switch (states.routine) {
+        case R_IDLE:
+            break;
+        case R_BLEND_AND_CLEAN:
+            Serial.println("Blending and cleaning");
+            break;
+        case R_CLEAN:
+            Serial.println("Cleaning blender");
+            break;
+        case R_BLEND:
+            Serial.println("Blending");
+            break;
+    }
 }
 
 // callback for received data
@@ -70,10 +121,7 @@ void receiveData(int byteCount) {
 }
 
 // callback for sending data
-void sendData() {
-    Wire.write((const char*)&states, sizeof(state_t));
-}
-
+void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
 
 bool pin_setup() {
     // Limit sense
@@ -216,4 +264,3 @@ void pivot_enc_isr_B() {
 bool calibrate_elev() {}
 
 bool calibrate_pivot() {}
-

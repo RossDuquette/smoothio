@@ -121,7 +121,9 @@ void receiveData(int byteCount) {
 
 void sendData() {
     // Polled by master
-    Wire.write(19);
+    char* data = "Hello World";
+    Serial.println(data);
+    Wire.write(data, 11);
 }
 
 /************************

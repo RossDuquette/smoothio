@@ -21,31 +21,35 @@ def print_modules():
     """
 
 def main():
-    Blender = mods.Blender()
-    Carousel = mods.Carousel()
-    Dispense = mods.Dispense()
+    blender = mods.Blender()
+    carousel = mods.Carousel()
+    dispense = mods.Dispense()
     while True:
         print_modules()
         # Receives the data from the User
         uin = input("Select Module: ")
         if uin == 1:
-            add = Blender.BLENDER_ADD
-            Blender.print_selectors()
+            add = blender.ADD
+            blender.print_selectors()
             selector = input("Selector number: ")
             if selector == 0:
-                Blender.read_data(bus)
+                blender.read_data(bus)
+                continue
             else:
-                Blender.print_actions(selector)
+                blender.print_actions(selector)
         elif uin == 2:
-            add = mods.Carousel.CAROUSEL_ADD
+            add = carousel.ADD
         elif uin == 3:
-            add = mods.Dispense.DISPENSE_ADD
+            add = dispense.ADD
         else:
             print "Wrong input. Please try again"
             continue
 
-        action = input("Action: ")
-        # Write out I2C command: address, msg[0], msg[1]
+        if selector == 255:
+            action = 0
+        else:
+            action = input("Action: ")
+
         print """
         ###########################
         # Sending command to node #

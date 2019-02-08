@@ -4,7 +4,7 @@
 ********************************************************/
 
 // Define enumerations
-typedef enum COMM_SELECTOR { // Decode message from master
+typedef enum COMM_SELECTOR {  // Decode message from master
     BLEND1 = 1,
     BLEND2,
     PIV,
@@ -13,26 +13,26 @@ typedef enum COMM_SELECTOR { // Decode message from master
     RESET = 255
 } COMM_SELECTOR;
 
-typedef enum BLENDER { // Blender state
+typedef enum BLENDER {  // Blender state
     B_IDLE = 0,
     B_ON
 } BLENDER;
 
-typedef enum ELEVATOR { // Elevator state
+typedef enum ELEVATOR {  // Elevator state
     E_IDLE = 0,
     E_ASCEND,
     E_DESCEND,
     E_HOME
 } ELEVATOR;
 
-typedef enum PIVOT { // Pivot state
+typedef enum PIVOT {  // Pivot state
     P_IDLE = 0,
     P_CW,
     P_CCW,
     P_HOME
 } PIVOT;
 
-typedef enum ROUTINE { // Complex commands
+typedef enum ROUTINE {  // Complex commands
     R_IDLE = 0,
     R_BLEND_AND_CLEAN,
     R_CLEAN,
@@ -42,14 +42,15 @@ typedef enum ROUTINE { // Complex commands
 // State variables, for communication
 typedef struct state_t {
     // Outputs
-    BLENDER blender1;
-    BLENDER blender2;
-    ELEVATOR elevator;
-    PIVOT pivot;
-    ROUTINE routine;
+    uint8_t blender1;
+    uint8_t blender2;
+    uint8_t elevator;
+    uint8_t pivot;
+    uint8_t routine;
+
     // Inputs
     uint8_t pivot_deg;
-    uint8_t elevator_height; // in cm
+    uint8_t elevator_height;  // in cm
     uint8_t limit1;
     uint8_t limit2;
 } state_t;
@@ -92,4 +93,3 @@ typedef struct state_t {
 #define CCW 2
 #define UP 3
 #define DOWN 4
-
