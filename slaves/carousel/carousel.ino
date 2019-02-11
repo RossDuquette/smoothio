@@ -27,19 +27,20 @@ bool pin_setup() {}
 
 void loop() { delay(100); }
 
+// Variable for I2C daisy chain test
+uint8_t i2c_data[2];
+
 // callback for received data
 void receiveData(int byteCount) {
-    int i = 0;
-    while (Wire.available()) {
-        number[i] = Wire.read();
-        i++;
+    if (Wire.available()) {
+        i2c_data[0] = Wire.read();
+        if (Wire.available()) {
+            i2c_data[1] = Wire.read();
+        }
     }
-    number[i] = '\0';
-    Serial.print(number);
 }
 
-// callback for sending data
-void sendData() { Wire.write(19); }
+void sendData() { Wire.write((const char*)i2c_data, 2); }
 
 /************************
  * Peripheral functions *

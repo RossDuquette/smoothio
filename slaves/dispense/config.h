@@ -6,7 +6,7 @@
 #define NUM_DISPENSE 0x06
 
 // Slave Address for the Communication
-#define SLAVE_ADDRESS 0x03
+#define SLAVE_ADDRESS 0x06
 
 // List of I2C messages
 #define FINISHED_COMMAND 0x01

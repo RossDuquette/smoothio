@@ -39,8 +39,18 @@ def main():
                 blender.print_actions(selector)
         elif uin == 2:
             add = carousel.ADD
+            selector = input("Selector number: ")
+            if selector == 0:
+                data = bus.read_i2c_block_data(add, 0, 2)
+                print ' '.join(data)
+                continue
         elif uin == 3:
             add = dispense.ADD
+            selector = input("Selector number: ")
+            if selector == 0:
+                data = bus.read_i2c_block_data(add, 0, 2)
+                print ' '.join(data)
+                continue
         else:
             print "Wrong input. Please try again"
             continue

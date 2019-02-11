@@ -98,33 +98,20 @@ void loop() {
     };
 }
 
+// Variable for I2C daisy chain test
+uint8_t i2c_data[2];
+
 // callback for received data
 void receiveData(int byteCount) {
-    int number;
-    int idx = 0;
-    int data[2];
-    while (Wire.available()) {
-        number = (int)Wire.read();
-        Serial.println(number);
-        data[idx] = number;
-        idx++;
-    }
-    switch (data[1]) {
-        case 1:
-            dstates[data[0]] = IDLE;
-            break;
-        case 2:
-            dstates[data[0]] = DISPENSE;
-            break;
+    if (Wire.available()) {
+        i2c_data[0] = Wire.read();
+        if (Wire.available()) {
+            i2c_data[1] = Wire.read();
+        }
     }
 }
 
-void sendData() {
-    // Polled by master
-    char* data = "Hello World";
-    Serial.println(data);
-    Wire.write(data, 11);
-}
+void sendData() { Wire.write((const char*)i2c_data, 2); }
 
 /************************
  * Peripheral functions *
