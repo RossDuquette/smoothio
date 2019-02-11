@@ -5,8 +5,8 @@
 
 // Define enumerations
 typedef enum COMM_SELECTOR {  // Decode message from master
-    BLEND1 = 1,
-    BLEND2,
+    BLEND0 = 1,
+    BLEND1,
     PIV,
     ELEV,
     ROUT,
@@ -42,8 +42,8 @@ typedef enum ROUTINE {  // Complex commands
 // State variables, for communication
 typedef struct state_t {
     // Outputs
+    uint8_t blender0;
     uint8_t blender1;
-    uint8_t blender2;
     uint8_t elevator;
     uint8_t pivot;
     uint8_t routine;
@@ -93,3 +93,6 @@ typedef struct state_t {
 #define CCW 2
 #define UP 3
 #define DOWN 4
+
+#define PIVOT_SPEED 0x80
+#define ELEV_SPEED 0x80

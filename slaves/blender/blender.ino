@@ -6,8 +6,8 @@
 #include <Wire.h>
 #include "config.h"
 
-uint32_t elev_position = 0;
-uint32_t pivot_position = 0;
+int32_t elev_position = 0;
+int32_t pivot_position = 0;
 
 state_t states;
 
@@ -27,32 +27,40 @@ void setup() {
 
 void loop() {
     // Blender state machines
-    switch (states.blender1) {
+    switch (states.blender0) {
         case B_IDLE:
+            blender_control(BLEND_EN_0, LOW);
             break;
         case B_ON:
-            Serial.println("Blender 1 on");
+            blender_control(BLEND_EN_0, HIGH);
+            Serial.println("Blender 0 on");
             break;
     };
-    switch (states.blender2) {
+    switch (states.blender1) {
         case B_IDLE:
+            blender_control(BLEND_EN_1, LOW);
             break;
         case B_ON:
-            Serial.println("Blender 2 on");
+            blender_control(BLEND_EN_1, HIGH);
+            Serial.println("Blender 1 on");
             break;
     };
 
     // Pivot state machine
     switch (states.pivot) {
         case P_IDLE:
+            rotate_pivot(NEUTRAL, PIVOT_SPEED);
             break;
         case P_CW:
+            rotate_pivot(CW, PIVOT_SPEED);
             Serial.println("Turning CW");
             break;
         case P_CCW:
+            rotate_pivot(CCW, PIVOT_SPEED);
             Serial.println("Turning blender CCW");
             break;
         case P_HOME:
+            home_pivot();
             Serial.println("Homing pivot");
             break;
     };
@@ -60,14 +68,18 @@ void loop() {
     // Elevator state machine
     switch (states.elevator) {
         case E_IDLE:
+            move_elevator(NEUTRAL, ELEV_SPEED);
             break;
         case E_ASCEND:
+            move_elevator(UP, ELEV_SPEED);
             Serial.println("Ascending elevator");
             break;
         case E_DESCEND:
+            move_elevator(DOWN, ELEV_SPEED);
             Serial.println("Descending elevator");
             break;
         case E_HOME:
+            home_elev();
             Serial.println("Homing elevator");
             break;
     };
@@ -86,6 +98,9 @@ void loop() {
             Serial.println("Blending");
             break;
     }
+
+    // Update sensor readings
+    update_sensors();
 }
 
 // callback for received data
@@ -95,11 +110,11 @@ void receiveData(int byteCount) {
         if (Wire.available()) {
             uint8_t data = Wire.read();
             switch (selector) {
+                case BLEND0:
+                    states.blender0 = (BLENDER)data;
+                    break;
                 case BLEND1:
                     states.blender1 = (BLENDER)data;
-                    break;
-                case BLEND2:
-                    states.blender2 = (BLENDER)data;
                     break;
                 case PIV:
                     states.pivot = (PIVOT)data;
@@ -152,6 +167,8 @@ bool pin_setup() {
     // ISR for encoders
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_A), elev_enc_isr_A, RISING);
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_B), elev_enc_isr_B, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_A), pivot_enc_isr_A, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_B), pivot_enc_isr_B, RISING);
 }
 
 /*******************************************
@@ -261,6 +278,30 @@ void pivot_enc_isr_B() {
     }
 }
 
-bool calibrate_elev() {}
+bool home_elev() {
+    if (states.limit1) {
+        move_elevator(NEUTRAL, ELEV_SPEED);
+        states.elevator = E_IDLE;
+        elev_position = 0;
+    } else {
+        move_elevator(UP, ELEV_SPEED);
+    }
+}
 
-bool calibrate_pivot() {}
+bool home_pivot() {
+    if (states.limit2) {
+        rotate_pivot(NEUTRAL, PIVOT_SPEED);
+        states.pivot = P_IDLE;
+        pivot_position = 0;
+    } else {
+        rotate_pivot(CW, PIVOT_SPEED); // Check homing direction
+    }
+}
+
+bool update_sensors() {
+    // Read limit switches
+    states.limit1 = (uint8_t)elev_limit();
+    states.limit2 = (uint8_t)pivot_limit();
+    // TO DO: Convert pivot encoder to angle
+    // TO DO: Convert elevator encoder to height
+}
