@@ -35,7 +35,7 @@ void loop() {
             blender_control(BLEND_EN_0, HIGH);
             Serial.println("Blender 0 on");
             break;
-    };
+    }
     switch (states.blender1) {
         case B_IDLE:
             blender_control(BLEND_EN_1, LOW);
@@ -44,7 +44,7 @@ void loop() {
             blender_control(BLEND_EN_1, HIGH);
             Serial.println("Blender 1 on");
             break;
-    };
+    }
 
     // Pivot state machine
     switch (states.pivot) {
@@ -63,7 +63,7 @@ void loop() {
             home_pivot();
             Serial.println("Homing pivot");
             break;
-    };
+    }
 
     // Elevator state machine
     switch (states.elevator) {
@@ -82,7 +82,7 @@ void loop() {
             home_elev();
             Serial.println("Homing elevator");
             break;
-    };
+    }
 
     // Routine state machine
     switch (states.routine) {
@@ -103,8 +103,16 @@ void loop() {
     update_sensors();
 }
 
-// callback for received data
+
+/************************
+*     I2C Functions     *
+*************************/
 void receiveData(int byteCount) {
+    if (byteCount != 2) { // Faulty message, empty buffer
+        for (int i = byteCount; i; i--) {
+            Wire.read();
+        }
+    }
     if (Wire.available()) {
         COMM_SELECTOR selector = (COMM_SELECTOR)Wire.read();
         if (Wire.available()) {
@@ -135,9 +143,12 @@ void receiveData(int byteCount) {
     }
 }
 
-// callback for sending data
 void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
 
+
+/************************
+*       Pin Setup       *
+*************************/
 bool pin_setup() {
     // Limit sense
     pinMode(PIVOT_ENC_A, INPUT);
@@ -171,40 +182,25 @@ bool pin_setup() {
     attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_B), pivot_enc_isr_B, RISING);
 }
 
-/*******************************************
- LIMIT_SENSE: Limit switch for elev
- LIMIT_SENSE_2: Limit switch for pivot
-********************************************/
-bool elev_limit() {
-    // Return reading of elevator limit switch
-    return digitalRead(LIMIT_SENSE);
-}
 
-bool pivot_limit() {
-    // Return reading of pivot limit switch
-    return digitalRead(LIMIT_SENSE_2);
-}
-
+/********************
+*   Motor Control   *
+*********************/
 bool blender_control(uint8_t blender_pin, uint8_t on) {
     digitalWrite(blender_pin, on);
     return true;
 }
 
-/*******************************************
- ELEV_IN_A: CW input (High / Low)
- ELEV_IN_B: CCW input (High / Low)
- ELEV_PWM: Speed (Duty cycle)
-********************************************/
 bool move_elevator(uint8_t dir, uint8_t speed) {
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, 0);
-    } else if (dir == UP) {
+    } else if (dir == UP) { // CW
         digitalWrite(ELEV_IN_A, HIGH);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, speed);
-    } else if (dir == DOWN) {
+    } else if (dir == DOWN) { // CCW
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, HIGH);
         analogWrite(ELEV_PWM, speed);
@@ -214,11 +210,6 @@ bool move_elevator(uint8_t dir, uint8_t speed) {
     return true;
 }
 
-/*******************************************
- PIVOT_IN_A: CW input (High / Low)
- PIVOT_IN_B: CCW input (High / Low)
- PIVOR_PWM: Speed (Duty cycle)
-********************************************/
 bool rotate_pivot(uint8_t dir, uint8_t speed) {
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(PIVOT_IN_A, LOW);
@@ -238,46 +229,10 @@ bool rotate_pivot(uint8_t dir, uint8_t speed) {
     return true;
 }
 
-/*******************************************
- ELEV_ENC_A: Value of encoder A
- ELEV_ENC_B: Value of encoder B
-********************************************/
-void elev_enc_isr_A() {
-    if (digitalRead(ELEV_ENC_B) == HIGH) {
-        elev_position++;
-    } else {
-        elev_position--;
-    }
-}
 
-void elev_enc_isr_B() {
-    if (digitalRead(ELEV_ENC_A) == HIGH) {
-        elev_position--;
-    } else {
-        elev_position++;
-    }
-}
-
-/*******************************************
- PIVOT_ENC_A: Value of encoder A
- PIVOT_ENC_B: Value of encoder B
-********************************************/
-void pivot_enc_isr_A() {
-    if (digitalRead(PIVOT_ENC_B) == HIGH) {
-        pivot_position++;
-    } else {
-        pivot_position--;
-    }
-}
-
-void pivot_enc_isr_B() {
-    if (digitalRead(PIVOT_ENC_A) == HIGH) {
-        pivot_position--;
-    } else {
-        pivot_position++;
-    }
-}
-
+/*********************
+*      Routines      *
+**********************/
 bool home_elev() {
     if (states.limit1) {
         move_elevator(NEUTRAL, ELEV_SPEED);
@@ -298,10 +253,60 @@ bool home_pivot() {
     }
 }
 
+
+/*********************
+*   Sensor Updates   *
+**********************/
 bool update_sensors() {
     // Read limit switches
     states.limit1 = (uint8_t)elev_limit();
     states.limit2 = (uint8_t)pivot_limit();
     // TO DO: Convert pivot encoder to angle
     // TO DO: Convert elevator encoder to height
+}
+
+bool elev_limit() {
+    // Return reading of elevator limit switch
+    return digitalRead(LIMIT_SENSE);
+}
+
+bool pivot_limit() {
+    // Return reading of pivot limit switch
+    return digitalRead(LIMIT_SENSE_2);
+}
+
+
+/*****************
+*      ISRs      *
+******************/
+void elev_enc_isr_A() {
+    if (digitalRead(ELEV_ENC_B) == HIGH) {
+        elev_position++;
+    } else {
+        elev_position--;
+    }
+}
+
+void elev_enc_isr_B() {
+    if (digitalRead(ELEV_ENC_A) == HIGH) {
+        elev_position--;
+    } else {
+        elev_position++;
+    }
+}
+
+void pivot_enc_isr_A() {
+    if (digitalRead(PIVOT_ENC_B) == HIGH) {
+        pivot_position++;
+    } else {
+        pivot_position--;
+    }
+}
+
+void pivot_enc_isr_B() {
+    if (digitalRead(PIVOT_ENC_A) == HIGH) {
+        pivot_position--;
+    } else {
+        pivot_position++;
+    }
 }
