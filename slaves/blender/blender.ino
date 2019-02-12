@@ -6,11 +6,15 @@
 #include <Wire.h>
 #include "config.h"
 
-int32_t elev_position = 0;
-int32_t pivot_position = 0;
+int32_t elev_position = 0; // Count elevator encoder pulses
+int32_t pivot_position = 0; // Count pivot encoder pulses
 
-state_t states;
+state_t states; // Store all system states
 
+
+/********************
+*   Main Functions  *
+*********************/
 void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
