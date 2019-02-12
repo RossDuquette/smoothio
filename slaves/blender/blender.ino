@@ -6,8 +6,8 @@
 #include <Wire.h>
 #include "config.h"
 
-int32_t elev_position = 0; // Count elevator encoder pulses
-int32_t pivot_position = 0; // Count pivot encoder pulses
+volatile int32_t elev_position = 0; // Count elevator encoder pulses
+volatile int32_t pivot_position = 0; // Count pivot encoder pulses
 
 state_t states; // Store all system states
 
@@ -53,19 +53,27 @@ void loop() {
     // Pivot state machine
     switch (states.pivot) {
         case P_IDLE:
-            rotate_pivot(NEUTRAL, PIVOT_SPEED);
+            pivot_rotate(NEUTRAL, 0);
             break;
         case P_CW:
-            rotate_pivot(CW, PIVOT_SPEED);
+            pivot_rotate(CW, PIVOT_SPEED);
             Serial.println("Turning CW");
             break;
         case P_CCW:
-            rotate_pivot(CCW, PIVOT_SPEED);
+            pivot_rotate(CCW, PIVOT_SPEED);
             Serial.println("Turning blender CCW");
             break;
         case P_HOME:
-            home_pivot();
+            if (states.p_homed == 0) {
+                home_pivot();
+            } else {
+                pivot_setAngle(0);
+            }
             Serial.println("Homing pivot");
+            break;
+        case P_ROTATE_180:
+            pivot_setAngle(180);
+            Serial.println("Rotating to 180");
             break;
     }
 
@@ -113,9 +121,10 @@ void loop() {
 *************************/
 void receiveData(int byteCount) {
     if (byteCount != 2) { // Faulty message, empty buffer
-        for (int i = byteCount; i; i--) {
+        while (Wire.available()) {
             Wire.read();
         }
+        return;
     }
     if (Wire.available()) {
         COMM_SELECTOR selector = (COMM_SELECTOR)Wire.read();
@@ -123,19 +132,19 @@ void receiveData(int byteCount) {
             uint8_t data = Wire.read();
             switch (selector) {
                 case BLEND0:
-                    states.blender0 = (BLENDER)data;
+                    states.blender0 = data;
                     break;
                 case BLEND1:
-                    states.blender1 = (BLENDER)data;
+                    states.blender1 = data;
                     break;
                 case PIV:
-                    states.pivot = (PIVOT)data;
+                    states.pivot = data;
                     break;
                 case ELEV:
-                    states.elevator = (ELEVATOR)data;
+                    states.elevator = data;
                     break;
                 case ROUT:
-                    states.routine = (ROUTINE)data;
+                    states.routine = data;
                     break;
                 case RESET:
                 default:
@@ -214,22 +223,44 @@ bool move_elevator(uint8_t dir, uint8_t speed) {
     return true;
 }
 
-bool rotate_pivot(uint8_t dir, uint8_t speed) {
-    if (dir == NEUTRAL || speed == 0) {
+bool pivot_rotate(uint8_t dir, uint8_t speed) {
+    speed = max(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
+    if (dir == NEUTRAL) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, LOW);
-        analogWrite(PIVOT_PWM, 0);
+        speed = 0;
     } else if (dir == CW) {
         digitalWrite(PIVOT_IN_A, HIGH);
         digitalWrite(PIVOT_IN_B, LOW);
-        analogWrite(PIVOT_PWM, speed);
     } else if (dir == CCW) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, HIGH);
-        analogWrite(PIVOT_PWM, speed);
     } else {
         return false;
     }
+    analogWrite(PIVOT_PWM, speed);
+    return true;
+}
+
+bool pivot_setAngle(uint8_t degrees) {
+    if (states.p_homed == 0) {
+        return false;
+    }
+    // Check if at angle
+    if (degrees == states.pivot_deg) {
+        states.pivot = P_IDLE;
+        pivot_rotate(NEUTRAL, 0);
+        return true;
+    }
+    // Determine direction
+    uint8_t dir, speed;
+    if (degrees < states.pivot_deg) {
+        dir = CW;
+    } else { // degrees > states.pivot_deg
+        dir = CCW;
+    }
+    // Determine speed, P control
+    speed = PIVOT_GAIN*abs((int16_t)degrees-(int16_t)states.pivot_deg);
     return true;
 }
 
@@ -249,11 +280,12 @@ bool home_elev() {
 
 bool home_pivot() {
     if (states.limit2) {
-        rotate_pivot(NEUTRAL, PIVOT_SPEED);
-        states.pivot = P_IDLE;
-        pivot_position = 0;
+        pivot_rotate(NEUTRAL, 0);
+        states.pivot = P_IDLE; // Turn off pivot
+        states.p_homed = 1; // Set as homed
+        pivot_position = 0; // Reset encoder counter
     } else {
-        rotate_pivot(CW, PIVOT_SPEED); // Check homing direction
+        pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
     }
 }
 
@@ -265,7 +297,9 @@ bool update_sensors() {
     // Read limit switches
     states.limit1 = (uint8_t)elev_limit();
     states.limit2 = (uint8_t)pivot_limit();
-    // TO DO: Convert pivot encoder to angle
+    // Convert pivot encoder to angle
+    // Map from (0,0) to (PIVOT_PULSES,180)
+    states.pivot_deg = (uint8_t)((float)pivot_position*PIVOT_PULSE_RATIO);
     // TO DO: Convert elevator encoder to height
 }
 

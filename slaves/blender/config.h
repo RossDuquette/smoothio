@@ -29,7 +29,8 @@ typedef enum PIVOT {  // Pivot state
     P_IDLE = 0,
     P_CW,
     P_CCW,
-    P_HOME
+    P_HOME,
+    P_ROTATE_180
 } PIVOT;
 
 typedef enum ROUTINE {  // Complex commands
@@ -49,6 +50,8 @@ typedef struct state_t {
     uint8_t routine;
 
     // Inputs
+    uint8_t p_homed;
+    uint8_t e_homed;
     uint8_t pivot_deg;
     uint8_t elevator_height;  // in cm
     uint8_t limit1;
@@ -94,5 +97,12 @@ typedef struct state_t {
 #define UP 3
 #define DOWN 4
 
-#define PIVOT_SPEED 0x80
-#define ELEV_SPEED 0x80
+// Motor parameters
+#define PIVOT_GAIN 1
+#define PIVOT_STICTION 0
+#define PIVOT_GEAR_RATIO (30*80/35.0) // Gear motor and external gears
+#define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*24) // Pulses/rev
+#define PIVOT_PULSE_RATIO (360/(float)PIVOT_PULSES_REV) // Degrees/pulse
+#define PIVOT_SPEED 5
+#define PIVOT_MAX_SPEED 200
+#define ELEV_SPEED 128
