@@ -38,3 +38,5 @@ bool cup_dispense();
 * Converts ADC value to temperature in Celsius, returned in value
 **/
 bool read_temp(uint8_t pin, float* value);
+
+

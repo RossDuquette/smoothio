@@ -3,10 +3,10 @@
  List of configuration parameters for the dispense unit
 ********************************************************/
 // Configurations
-#define NUM_DISPENSE 0x06
+#define NUM_DISPENSE 0x08
 
 // Slave Address for the Communication
-#define SLAVE_ADDRESS 0x03
+#define SLAVE_ADDRESS 0x06
 
 // List of I2C messages
 #define FINISHED_COMMAND 0x01
@@ -50,3 +50,5 @@
 #define CCW 2
 #define UP 3
 #define DOWN 4
+
+
