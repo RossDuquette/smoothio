@@ -102,21 +102,13 @@ void loop() {
 void receiveData(int byteCount) {
     int number;
     int idx = 0;
-    int data[2];
-    while (Wire.available()) {
-        number = (int)Wire.read();
-        Serial.println(number);
-        data[idx] = number;
-        idx++;
+    if (Wire.available()) {
+        u_int8_t selector = Wire.read();
+        if (Wire.available()) {
+            uint8_t data = Wire.read();
+        }
     }
-    switch (data[1]) {
-        case 1:
-            dstates[data[0]] = IDLE;
-            break;
-        case 2:
-            dstates[data[0]] = DISPENSE;
-            break;
-    }
+    dstates[data[selector]] = data;
 }
 
 void sendData() {

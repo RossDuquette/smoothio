@@ -121,7 +121,10 @@ void receiveData(int byteCount) {
 }
 
 // callback for sending data
-void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
+void sendData() {
+    // send back state to master
+    Wire.write((const char*)&states, sizeof(state_t));
+}
 
 bool pin_setup() {
     // Limit sense

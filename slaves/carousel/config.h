@@ -3,16 +3,33 @@
  List of configuration parameters for the carousel unit
 ********************************************************/
 
+typedef enum COMM_SELECTOR {  // Decode message from master
+    CW = 1,
+    CCW,
+    RESET = 255
+} COMM_SELECTOR;
+
+// State variables, for communication
+typedef struct state_t {
+    // Outputs
+    uint8_t direction;
+    uint8_t num_cups;
+
+    // Inputs
+    uint8_t cup_sense1;
+    uint8_t cup_sense2;
+} state_t;
+
 // Slave Address for the Communication
 #define SLAVE_ADDRESS 0x05
 
-// List of I2C messages
-#define FINISHED_COMMAND 0x01
+// Misc
+#define CUP_WAIT_TIME 1000;
 
 // Pin Layout
 #define DIR 12
 #define STEP 13
-#define nEN 33 
+#define nEN 33
 #define M2 32
 #define M1 31
 #define M0 30
