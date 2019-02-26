@@ -12,6 +12,9 @@ typedef enum DState { IDLE, DISPENSE } DState;
 // States for each cup dispense +1  for the cup dispenser
 DState dstates[NUM_DISPENSE + 1];
 
+uint8_t dispensers[NUM_DISPENSE] = {FROZEN1_EN, FROZEN2_EN, FROZEN3_EN, FROZEN4_EN, 
+                                    LIQUID1_EN, LIQUID2_EN, LIQUID3_EN, POWDER1_EN};
+
 void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
@@ -67,35 +70,39 @@ bool pin_setup() {
 }
 
 void loop() {
-    food_dispense(FROZEN1_EN, HIGH);
-    // Run state machines for each dispenser
-    for (int i = 0; i < NUM_DISPENSE; i++) {
-        switch (dstates[i]) {
-            case IDLE:
-                digitalWrite(22, LOW);
-                digitalWrite(23, LOW);
-                break;
-            case DISPENSE:
-                Serial.print("Dispenser ");
-                Serial.print(i);
-                Serial.println(" Dispensing");
-                digitalWrite(22, HIGH);
-                digitalWrite(23, LOW);
-                break;
-        };
+    for (uint8_t i = 0; i < NUM_DISPENSE; i++) {
+      food_dispense(dispensers[i], 1);
     }
-    // Run state machine for cup dispenser
-    switch (dstates[NUM_DISPENSE]) {
-        case IDLE:
-            digitalWrite(22, LOW);
-            digitalWrite(23, LOW);
-            break;
-        case DISPENSE:
-            Serial.println("Cup Dispenser Dispensing");
-            digitalWrite(22, LOW);
-            digitalWrite(23, HIGH);
-            break;
-    };
+    delay(2000);
+    for (uint8_t i = 0; i < NUM_DISPENSE; i++) {
+      food_dispense(dispensers[i], 0);
+    }
+    delay(2000);
+
+    // // Run state machines for each dispenser
+    // for (int i = 0; i < NUM_DISPENSE; i++) {
+    //     switch (dstates[i]) {
+    //         case IDLE:
+    //             food_dispense(dispensers[i], 0);
+    //             break;
+    //         case DISPENSE:
+    //             Serial.print("Dispenser ");
+    //             Serial.print(i);
+    //             Serial.println(" Dispensing");
+    //             food_dispense(dispensers[i], 1);
+    //             break;
+    //     };
+    // }
+    // // Run state machine for cup dispenser
+    // switch (dstates[NUM_DISPENSE]) {
+    //     case IDLE:
+    //         break;
+    //     case DISPENSE:
+    //         Serial.println("Cup Dispenser Dispensing");
+    //         cup_dispense();
+    //         dstates[NUM_DISPENSE] = IDLE;
+    //         break;
+    // };
 }
 
 // callback for received data
@@ -140,3 +147,5 @@ bool cup_dispense() {
 }
 
 bool read_temp(uint8_t pin, float* value) { return true; }
+
+
