@@ -20,14 +20,15 @@ void setup() {
     // pin setup
     pin_setup();
 
+    // initialize stepper
+    stepper_init(MICROSTEPS);
+
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
 }
 
 bool pin_setup() {
-    pinMode(CURR_SENSE0, INPUT);
-    pinMode(CURR_SENSE1, INPUT); 
     pinMode(CUP_MASS0, INPUT);
     pinMode(CUP_MASS1, INPUT);
     pinMode(CAROUSEL_POS, INPUT);
@@ -62,8 +63,6 @@ void loop() {
 void read_sensors() {
     states.cup_sense0 = analogRead(CUP_SENSE0);
     states.cup_sense1 = analogRead(CUP_SENSE1);
-    states.curr_sense0 = analogRead(CURR_SENSE0);
-    states.curr_sense1 = analogRead(CURR_SENSE1);
     states.cup_mass0 = analogRead(CUP_MASS0);
     states.cup_mass1 = analogRead(CUP_MASS1);
     states.carousel_pos = analogRead(CAROUSEL_POS);
@@ -105,9 +104,9 @@ bool carousel_home() { return true; }
 
 bool carousel_rotate(uint8_t dir, uint8_t n) {
     if (dir == CW) {
-        stepper.rotate(72 * n);  // 360 degrees / 5
+        stepper.startRotate(DEG_PER_SLOT * n);
         return true;
     }
-   stepper.rotate(-72 * n);  // 360 degrees / 5
+   stepper.startRotate(-DEG_PER_SLOT * n);
    return true; 
 }

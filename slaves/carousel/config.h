@@ -6,6 +6,7 @@
 typedef enum COMM_SELECTOR {  // Decode message from master
     CW = 1,
     CCW,
+    HOME,
     RESET = 255
 } COMM_SELECTOR;
 
@@ -24,8 +25,6 @@ typedef struct state_t {
     // Inputs
     uint8_t cup_sense0;
     uint8_t cup_sense1;
-    uint8_t curr_sense0;
-    uint8_t curr_sense1;
     uint8_t cup_mass0;
     uint8_t cup_mass1;
     uint8_t carousel_pos;
@@ -34,9 +33,22 @@ typedef struct state_t {
 // Slave Address for the Communication
 #define SLAVE_ADDRESS 0x05
 
+// Library found at https://github.com/laurb9/StepperDriver
+#include "DRV8825.h"
+#define MOTOR_STEPS 200 // Per revolution
+#define RPM 30
+/**
+ * Microstepping mode: 1, 2, 4, 8, 16 or 32
+ * Mode 1 is full speed.
+ * Mode 32 is 32 microsteps per step.
+ * The motor should rotate just as fast (at the set RPM) 
+**/
+#define MICROSTEPS 16
+
 // Misc
 #define CUP_WAIT_TIME 1000
 #define SENS_UPDATE_TIME 100
+#define DEG_PER_SLOT 72 // = 360/5
 
 // Pin Layout
 #define DIR 12
@@ -56,8 +68,6 @@ typedef struct state_t {
 #define ADD_A13 A13
 #define ADD_A12 A12
 
-#define CURR_SENSE1 A7
-#define CURR_SENSE0 A6
 #define CUP_MASS1 A5
 #define CUP_MASS0 A4
 

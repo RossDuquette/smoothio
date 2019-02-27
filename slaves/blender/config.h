@@ -56,6 +56,8 @@ typedef struct state_t {
     uint8_t elevator_height;  // in cm
     uint8_t limit1;
     uint8_t limit2;
+    uint8_t curr_sense0;
+    uint8_t curr_sense1;
 } state_t;
 
 // Slave Address for the Communication
@@ -79,6 +81,9 @@ typedef struct state_t {
 
 #define LIMIT_SENSE 39
 #define LIMIT_SENSE_2 A2
+
+#define CURR_SENSE1 A7
+#define CURR_SENSE0 A6
 
 #define ADD_D25 25
 #define ADD_D24 24

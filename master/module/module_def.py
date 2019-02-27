@@ -17,7 +17,7 @@ class Blender:
         0 : "IDLE",
         1 : "CW",
         2 : "CCW",
-        3 : "HOME"
+        3 : "HOME",
         4 : "ROTATE_180"
     }
     routine_states = {
@@ -30,6 +30,7 @@ class Blender:
     # Init variables
     def __init__(self):
         self.ADD = 0x04
+        self.block_size = 13
         self.blender0 = 0
         self.blender1 = 0
         self.elevator = 0
@@ -41,11 +42,12 @@ class Blender:
         self.elevator_height = 0
         self.limit1 = 0
         self.limit2 = 0
+        self.curr_sense0 = 0
+        self.curr_sense1 = 0
 
     # Read data from blend module
     def read_data(self, i2cbus):
-        data = i2cbus.read_i2c_block_data(self.ADD, 0, 11)
-        #print ''.join(map(chr, data)) # Print raw incomming data
+        data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
         self.blender0 = data[0]
         self.blender1 = data[1]
         self.elevator = data[2]
@@ -57,6 +59,8 @@ class Blender:
         self.elevator_height = data[8]
         self.limit1 = data[9]
         self.limit2 = data[10]
+        self.curr_sense0 = data[11]
+        self.curr_sense1 = data[12]
         print "Blender 0: {}".format(self.blender_states[self.blender0])
         print "Blender 1: {}".format(self.blender_states[self.blender1])
         print "Elevator: {}".format(self.elevator_states[self.elevator])
@@ -68,6 +72,8 @@ class Blender:
         print "Elevator Height: {}cm".format(self.elevator_height)
         print "Limit Switch 1: {}".format(self.limit1)
         print "Limit Switch 2: {}".format(self.limit2)
+        print "Current Sense 0: {}".format(self.curr_sense0)
+        print "Current Sense 1: {}".format(self.curr_sense1)
 
 
     # Selectors
@@ -104,10 +110,111 @@ class Blender:
                 print "        {} : {}".format(key,val)
         print ""
 
+    # Main handle
+    def handle(self, i2cbus):
+        self.print_selectors()
+        selector = input("Selector number: ")
+        if selector == 0:
+            self.read_data(i2cbus)
+            return
+        if selector != 255:
+            self.print_actions(selector)
+            action = input("Action: ")
+        else:
+            action = 0
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        print "\nCommand sent\n\n"
+
+
+########################
+#       Carousel       #
+########################
 class Carousel:
+    carousel_states = {
+        0 : "IDLE",
+        1 : "CW",
+        2 : "CCW"
+    }
+    carousel_selectors = {
+        0 : "Read State",
+        1 : "CW",
+        2 : "CCW",
+        3 : "HOME",
+        255 : "RESET"
+    }
+
+    # Init variables
     def __init__(self):
         self.ADD = 0x05
+        self.block_size = 7
+        self.c_state = 0
+        self.num_cups = 0
+        self.cup_sense0 = 0
+        self.cup_sense1 = 0
+        self.cup_mass0 = 0
+        self.cup_mass1 = 0
+        self.carousel_pos = 0
 
+    # Read data from blend module
+    def read_data(self, i2cbus):
+        data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
+        self.c_state = data[0]
+        self.num_cups = data[1]
+        self.cup_sense0 = data[2]
+        self.cup_sense1 = data[3]
+        self.cup_mass0 = data[4]
+        self.cup_mass1 = data[5]
+        self.carousel_pos = data[6]
+        print "Carousel State: {}".format(self.carousel_states[self.c_state])
+        print "Slots to Rotate: {}".format(self.limit2)
+        print "Cup Sense 0: {}".format(self.cup_sense0)
+        print "Cup Sense 1: {}".format(self.cup_sense1)
+        print "Cup Mass 0: {}".format(self.cup_mass0)
+        print "Cup Mass 1: {}".format(self.cup_mass1)
+        print "Homing Sensor: {}".format(self.carousel_pos)
+
+    # Selectors
+    def print_selectors(self):
+        print """
+        Selectors
+        --------------
+        """
+        for key,val in self.carousel_selectors.items():
+            print "        {} : {}".format(key,val)
+
+    # Main handle
+    def handle(self, i2cbus):
+        self.print_selectors()
+        selector = input("Selector number: ")
+        if selector == 0:
+            self.read_data(i2cbus)
+            return
+        if selector != 255:
+            action = input("Number of slots to rotate: ")
+        else:
+            action = 0
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        print "\nCommand sent\n\n"
+
+
+#######################
+#      Dispense       #
+#######################
 class Dispense:
+    # Init variables
     def __init__(self):
         self.ADD = 0x06
+    
+    # Main handle
+    def handle(self, i2cbus):
+        self.print_selectors()
+        selector = input("Selector number: ")
+        if selector == 0:
+            self.read_data(i2cbus)
+            return
+        if selector != 255:
+            action = input("Number of slots to rotate: ")
+        else:
+            action = 0
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        print "\nCommand sent\n\n"

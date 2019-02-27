@@ -301,6 +301,9 @@ bool update_sensors() {
     // Map from (0,0) to (PIVOT_PULSES,180)
     states.pivot_deg = (uint8_t)((float)pivot_position*PIVOT_PULSE_RATIO);
     // TO DO: Convert elevator encoder to height
+
+    states.curr_sense0 = analogRead(CURR_SENSE0);
+    states.curr_sense1 = analogRead(CURR_SENSE1);
 }
 
 bool elev_limit() {
