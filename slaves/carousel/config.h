@@ -36,7 +36,7 @@ typedef struct state_t {
 // Library found at https://github.com/laurb9/StepperDriver
 #include "DRV8825.h"
 #define MOTOR_STEPS 200 // Per revolution
-#define RPM 30
+#define RPM 120
 /**
  * Microstepping mode: 1, 2, 4, 8, 16 or 32
  * Mode 1 is full speed.
@@ -48,7 +48,8 @@ typedef struct state_t {
 // Misc
 #define CUP_WAIT_TIME 1000
 #define SENS_UPDATE_TIME 100
-#define DEG_PER_SLOT 72 // = 360/5
+#define GEAR_RATIO 6.7
+#define DEG_PER_SLOT (360/5*GEAR_RATIO)
 
 // Pin Layout
 #define DIR 12
