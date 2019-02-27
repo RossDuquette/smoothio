@@ -53,7 +53,7 @@ typedef struct state_t {
     uint8_t p_homed;
     uint8_t e_homed;
     uint8_t pivot_deg;
-    uint8_t elevator_height;  // in cm
+    uint8_t elevator_height;  // in mm, measured from top
     uint8_t limit1;
     uint8_t limit2;
     uint8_t curr_sense0;
@@ -102,7 +102,7 @@ typedef struct state_t {
 #define UP 3
 #define DOWN 4
 
-// Motor parameters
+// Pivot parameters
 #define PIVOT_GAIN 1
 #define PIVOT_STICTION 0
 #define PIVOT_GEAR_RATIO (30*80/35.0) // Gear motor and external gears
@@ -110,4 +110,12 @@ typedef struct state_t {
 #define PIVOT_PULSE_RATIO (360/(float)PIVOT_PULSES_REV) // Degrees/pulse
 #define PIVOT_SPEED 5
 #define PIVOT_MAX_SPEED 200
-#define ELEV_SPEED 128
+
+// Elevator parameters
+#define ELEV_GAIN 1
+#define ELEV_STICTION 0
+#define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
+#define ELEV_PULSE_RATIO 12 // TO DO: mm/pulse
+#define ELEV_SPEED 5
+#define ELEV_MAX_SPEED 200
+#define ELEV_MAX_HEIGHT 200
