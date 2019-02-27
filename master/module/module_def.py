@@ -142,7 +142,7 @@ class Carousel:
     # Init variables
     def __init__(self):
         self.ADD = 0x05
-        self.block_size = 7
+        self.block_size = 8
         self.c_state = 0
         self.num_cups = 0
         self.cup_sense0 = 0
@@ -150,6 +150,7 @@ class Carousel:
         self.cup_mass0 = 0
         self.cup_mass1 = 0
         self.carousel_pos = 0
+        self.homed = 0
 
     # Read data from blend module
     def read_data(self, i2cbus):
@@ -168,6 +169,7 @@ class Carousel:
         print "Cup Mass 0: {}".format(self.cup_mass0)
         print "Cup Mass 1: {}".format(self.cup_mass1)
         print "Homing Sensor: {}".format(self.carousel_pos)
+        print "Homed: {}".format(self.homed)
 
     # Selectors
     def print_selectors(self):
@@ -197,9 +199,68 @@ class Carousel:
 #      Dispense       #
 #######################
 class Dispense:
+    dispense_selectors = {
+        0 : "Read State",
+        1 : "Frozen 1",
+        2 : "Frozen 2",
+        3 : "Frozen 3",
+        4 : "Liquid 1",
+        5 : "Liquid 2",
+        6 : "Liquid 3",
+        7 : "Cup",
+        255 : "Reset"
+    }
+    dispense_actions = {
+        0 : "IDLE",
+        1 : "DISPENSE"
+    }
     # Init variables
     def __init__(self):
         self.ADD = 0x06
+        self.block_size = 7
+        self.F1 = 0
+        self.F2 = 0
+        self.F3 = 0
+        self.L1 = 0
+        self.L2 = 0
+        self.L3 = 0
+        self.cup = 0
+
+    # Read state
+    def read_data(self, i2cbus):
+        data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
+        self.F1 = data[0]
+        self.F2 = data[1]
+        self.F3 = data[2]
+        self.L1 = data[3]
+        self.L2 = data[4]
+        self.L3 = data[5]
+        self.cup = data[6]
+        print "Frozen 1: {}".format(self.dispense_actions[self.F1])
+        print "Frozen 2: {}".format(self.dispense_actions[self.F2])
+        print "Frozen 3: {}".format(self.dispense_actions[self.F3])
+        print "Liquid 1: {}".format(self.dispense_actions[self.L1])
+        print "Liquid 2: {}".format(self.dispense_actions[self.L2])
+        print "Liquid 3: {}".format(self.dispense_actions[self.L3])
+        print "Cup Dispense: {}".format(self.dispense_actions[self.cup])
+
+    # Print selectors
+    def print_selectors(self):
+        print """
+        Selectors
+        --------------
+        """
+        for key,val in self.dispense_selectors.items():
+            print "        {} : {}".format(key,val)
+
+    # Print actions
+    def print_actions(self):
+        print """
+        Actions
+        --------------
+        """
+        for key,val in self.dispense_actions.items():
+            print "        {} : {}".format(key,val)
     
     # Main handle
     def handle(self, i2cbus):
@@ -209,7 +270,8 @@ class Dispense:
             self.read_data(i2cbus)
             return
         if selector != 255:
-            action = input("Number of slots to rotate: ")
+            self.print_actions()
+            action = input("Action: ")
         else:
             action = 0
         i2cbus.write_i2c_block_data(self.ADD, selector, [action])

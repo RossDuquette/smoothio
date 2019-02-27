@@ -27,6 +27,9 @@ void setup() {
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
+
+    // Init states
+    memset(&states, 0, sizeof(state_t));
 }
 
 void loop() {
@@ -148,8 +151,7 @@ void receiveData(int byteCount) {
                     break;
                 case RESET:
                 default:
-                    // Set all states to IDLE
-                    memset(&states, 0, sizeof(state_t));
+                    state_setup();
                     break;
             }
         }
@@ -193,6 +195,11 @@ bool pin_setup() {
     attachInterrupt(digitalPinToInterrupt(ELEV_ENC_B), elev_enc_isr_B, RISING);
     attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_A), pivot_enc_isr_A, RISING);
     attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_B), pivot_enc_isr_B, RISING);
+}
+
+bool state_setup() {
+    memset(&states, 0, sizeof(state_t));
+    return true;
 }
 
 

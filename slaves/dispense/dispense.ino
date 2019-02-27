@@ -81,11 +81,9 @@ void loop() {
     // Run state machine for cup dispenser
     switch (dstates[NUM_DISPENSE]) {
         case IDLE:
-            stepper.nextAction(); // Will move if a dispense action not complete
             break;
         case DISPENSE:
             cup_dispense();
-            dstates[NUM_DISPENSE] = IDLE;
             break;
     }
 }
@@ -93,10 +91,14 @@ void loop() {
 // callback for received data
 void receiveData(int byteCount) {
     if (Wire.available()) {
-        u_int8_t selector = Wire.read();
+        uint8_t selector = Wire.read();
         if (Wire.available()) {
             uint8_t data = Wire.read();
-            dstates[selector-1] = data;
+            if (selector == 255) {
+                state_setup();
+            } else {
+                dstates[selector-1] = data;
+            }
         }
     }
 }
@@ -130,6 +132,13 @@ bool stepper_init() {
 }
 
 bool cup_dispense() {
-    stepper.startRotate(DEG_PER_CUP);
+    static uint8_t dispensing = 0;
+    if (dispensing == 0) {
+        stepper.startRotate(DEG_PER_CUP);
+        dispensing = 1;
+    } else if (stepper.nextAction() == 0) { // Done dispensing
+        dispensing = 0;
+        dstates[NUM_DISPENSE] = IDLE;
+    }
     return true;
 }

@@ -23,6 +23,7 @@ typedef struct state_t {
     uint8_t cup_mass0;
     uint8_t cup_mass1;
     uint8_t carousel_pos;
+    uint8_t homed;
 } state_t;
 
 // Slave Address for the Communication

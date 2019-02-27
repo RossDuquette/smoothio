@@ -26,6 +26,9 @@ void setup() {
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
+
+    // Init states
+    state_setup();
 }
 
 bool pin_setup() {
@@ -34,6 +37,12 @@ bool pin_setup() {
     pinMode(CAROUSEL_POS, INPUT);
     pinMode(CUP_SENSE0, INPUT);
     pinMode(CUP_SENSE1, INPUT);
+}
+
+bool state_setup() {
+    memset(&states, 0, sizeof(state_t));
+    states.c_state = IDLE;
+    return true;
 }
 
 void loop() {
@@ -72,8 +81,12 @@ void receiveData(int byteCount) {
         COMM_SELECTOR selector = (COMM_SELECTOR)Wire.read();
         if (Wire.available()) {
             uint8_t data = Wire.read();
-            states.c_state = selector;
-            states.num_cups = data;
+            if (selector == 255) {
+                state_setup();
+            } else {
+                states.c_state = selector;
+                states.num_cups = data;
+            }
         }
     }
 }
@@ -111,6 +124,7 @@ bool carousel_home() {
     states.c_state = IDLE;
     read_sensors();
     if (states.carousel_pos == 1) {
+        states.homed = 1;
         return true;
     }
     return false;
