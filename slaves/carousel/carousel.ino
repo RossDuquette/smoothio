@@ -21,7 +21,7 @@ void setup() {
     pin_setup();
 
     // initialize stepper
-    stepper_init(MICROSTEPS);
+    stepper_init();
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
@@ -86,27 +86,29 @@ void sendData() {
     Wire.write((const char*)&states, sizeof(states));
 }
 
-bool stepper_init(uint8_t microsteps) {
+bool stepper_init() {
     stepper.begin(RPM);
     stepper.setEnableActiveState(LOW);
-    stepper.enable();
+    stepper.setSpeedProfile(stepper.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
     /*
      * Microstepping mode: 1, 2, 4, 8, 16 or 32
      * Mode 1 is full speed.
      * Mode 32 is 32 microsteps per step.
      * The motor should rotate just as fast (at the set RPM)
      */
-    stepper.setMicrostep(16);
+    stepper.setMicrostep(MICROSTEPS);
     return true;
 }
 
 bool carousel_home() { return true; }
 
 bool carousel_rotate(uint8_t dir, uint8_t n) {
+    stepper.enable();
     if (dir == CW) {
-        stepper.startRotate(DEG_PER_SLOT * n);
-        return true;
+        stepper.rotate(DEG_PER_SLOT * n);
+    } else {
+        stepper.rotate(-DEG_PER_SLOT * n);
     }
-   stepper.startRotate(-DEG_PER_SLOT * n);
-   return true; 
+    stepper.disable();
+    return true; 
 }
