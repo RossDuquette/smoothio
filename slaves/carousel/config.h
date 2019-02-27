@@ -7,14 +7,9 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     CW = 1,
     CCW,
     HOME,
-    RESET = 255
+    DISABLE, // Disables the stepper motor, re-enabled on next motion
+    IDLE = 255
 } COMM_SELECTOR;
-
-typedef enum CAROUSEL {
-    C_IDLE = 0,
-    MOVING_CW,
-    MOVING_CCW
-} CAROUSEL;
 
 // State variables, for communication
 typedef struct state_t {
@@ -37,6 +32,7 @@ typedef struct state_t {
 #include "DRV8825.h"
 #define MOTOR_STEPS 200 // Per revolution
 #define RPM 120
+#define HOMING_RPM 30
 /**
  * Microstepping mode: 1, 2, 4, 8, 16 or 32
  * Mode 1 is full speed.
@@ -75,6 +71,3 @@ typedef struct state_t {
 #define CAROUSEL_POS A2
 #define CUP_SENSE1 A1
 #define CUP_SENSE0 A0
-
-// Function defs
-float get_time();

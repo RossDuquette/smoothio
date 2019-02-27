@@ -4,7 +4,7 @@
 ********************************************************/
 
 #include <Wire.h>
-#include "peripherals.h"
+#include "config.h"
 
 DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
 float rot_stop_time = 0;
@@ -37,21 +37,19 @@ bool pin_setup() {
 }
 
 void loop() {
-    if (states.num_cups != 0) {
-        // Not sure if time() is the right call
-        rot_stop_time = millis() + CUP_WAIT_TIME*states.num_cups;
-        carousel_rotate(states.c_state, states.num_cups);
-    }
-    switch(states.c_state) {
-        case C_IDLE:
+    switch (states.c_state) {
+        case CW:
+        case CCW:
+            carousel_rotate(states.c_state, states.num_cups);
             break;
-        case MOVING_CW:
-            if (millis() > rot_stop_time)
-                states.c_state = C_IDLE;
+        case HOME:
+            carousel_home();
             break;
-        case MOVING_CCW:
-            if (millis() > rot_stop_time)
-                states.c_state = C_IDLE; 
+        case DISABLE:
+            stepper.disable();
+            break;
+        case IDLE:
+        default:
             break;
     }
     if (millis() > next_sens_update) {
@@ -61,11 +59,11 @@ void loop() {
 }
 
 void read_sensors() {
-    states.cup_sense0 = analogRead(CUP_SENSE0);
-    states.cup_sense1 = analogRead(CUP_SENSE1);
+    states.cup_sense0 = digitalRead(CUP_SENSE0);
+    states.cup_sense1 = digitalRead(CUP_SENSE1);
     states.cup_mass0 = analogRead(CUP_MASS0);
     states.cup_mass1 = analogRead(CUP_MASS1);
-    states.carousel_pos = analogRead(CAROUSEL_POS);
+    states.carousel_pos = digitalRead(CAROUSEL_POS);
 }
 
 // callback for received data
@@ -89,7 +87,7 @@ void sendData() {
 bool stepper_init() {
     stepper.begin(RPM);
     stepper.setEnableActiveState(LOW);
-    stepper.setSpeedProfile(stepper.LINEAR_SPEED, MOTOR_ACCEL, MOTOR_DECEL);
+    stepper.setSpeedProfile(stepper.LINEAR_SPEED, 1000, 1000);
     /*
      * Microstepping mode: 1, 2, 4, 8, 16 or 32
      * Mode 1 is full speed.
@@ -97,18 +95,35 @@ bool stepper_init() {
      * The motor should rotate just as fast (at the set RPM)
      */
     stepper.setMicrostep(MICROSTEPS);
+    stepper.enable();
     return true;
 }
 
-bool carousel_home() { return true; }
+bool carousel_home() {
+    stepper.enable();
+    stepper.setRPM(HOMING_RPM);
+    stepper.startRotate(720);
+    while (digitalRead(CAROUSEL_POS) == 0) {
+        stepper.nextAction();
+    }
+    stepper.stop();
+    stepper.setRPM(RPM);
+    states.c_state = IDLE;
+    read_sensors();
+    if (states.carousel_pos == 1) {
+        return true;
+    }
+    return false;
+}
 
 bool carousel_rotate(uint8_t dir, uint8_t n) {
     stepper.enable();
     if (dir == CW) {
         stepper.rotate(DEG_PER_SLOT * n);
-    } else {
+    } else if (dir == CCW) {
         stepper.rotate(-DEG_PER_SLOT * n);
     }
-    stepper.disable();
+    states.c_state = IDLE;
+    states.num_cups = 0;
     return true; 
 }

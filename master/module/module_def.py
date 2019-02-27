@@ -130,16 +130,12 @@ class Blender:
 #       Carousel       #
 ########################
 class Carousel:
-    carousel_states = {
-        0 : "IDLE",
-        1 : "CW",
-        2 : "CCW"
-    }
     carousel_selectors = {
         0 : "Read State",
         1 : "CW",
         2 : "CCW",
         3 : "HOME",
+        4 : "DISABLE STEPPER",
         255 : "RESET"
     }
 
@@ -165,8 +161,8 @@ class Carousel:
         self.cup_mass0 = data[4]
         self.cup_mass1 = data[5]
         self.carousel_pos = data[6]
-        print "Carousel State: {}".format(self.carousel_states[self.c_state])
-        print "Slots to Rotate: {}".format(self.limit2)
+        print "Carousel State: {}".format(self.carousel_selectors[self.c_state])
+        print "Slots to Rotate: {}".format(self.num_cups)
         print "Cup Sense 0: {}".format(self.cup_sense0)
         print "Cup Sense 1: {}".format(self.cup_sense1)
         print "Cup Mass 0: {}".format(self.cup_mass0)
@@ -189,7 +185,7 @@ class Carousel:
         if selector == 0:
             self.read_data(i2cbus)
             return
-        if selector != 255:
+        if selector == 1 or selector == 2:
             action = input("Number of slots to rotate: ")
         else:
             action = 0
