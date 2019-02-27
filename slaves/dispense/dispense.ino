@@ -5,21 +5,18 @@
 
 #include <Wire.h>
 #include "config.h"
-#include "peripherals.h"
 
 DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
-typedef enum DState { IDLE, DISPENSE } DState;
 // States for each cup dispense +1  for the cup dispenser
-DState dstates[NUM_DISPENSE + 1];
+uint8_t dstates[NUM_DISPENSE + 1];
 
-uint8_t dispensers[NUM_DISPENSE] = {FROZEN1_EN, FROZEN2_EN, FROZEN3_EN, FROZEN4_EN, 
-                                    LIQUID1_EN, LIQUID2_EN, LIQUID3_EN, POWDER1_EN};
+uint8_t dispensers[NUM_DISPENSE] = {FROZEN1_EN, FROZEN2_EN, FROZEN3_EN,
+                                    LIQUID1_EN, LIQUID2_EN, LIQUID3_EN};
 
 void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
-    Serial.println("Starting Dispense Node");
 
     // pin and state and servo setup
     pin_setup();
@@ -70,59 +67,43 @@ bool pin_setup() {
 }
 
 void loop() {
-    for (uint8_t i = 0; i < NUM_DISPENSE; i++) {
-      food_dispense(dispensers[i], 1);
+    // Run state machines for each dispenser
+    for (int i = 0; i < NUM_DISPENSE; i++) {
+        switch (dstates[i]) {
+            case IDLE:
+                food_dispense(dispensers[i], 0);
+                break;
+            case DISPENSE:
+                food_dispense(dispensers[i], 1);
+                break;
+        }
     }
-    delay(2000);
-    for (uint8_t i = 0; i < NUM_DISPENSE; i++) {
-      food_dispense(dispensers[i], 0);
+    // Run state machine for cup dispenser
+    switch (dstates[NUM_DISPENSE]) {
+        case IDLE:
+            stepper.nextAction(); // Will move if a dispense action not complete
+            break;
+        case DISPENSE:
+            cup_dispense();
+            dstates[NUM_DISPENSE] = IDLE;
+            break;
     }
-    delay(2000);
-
-    // // Run state machines for each dispenser
-    // for (int i = 0; i < NUM_DISPENSE; i++) {
-    //     switch (dstates[i]) {
-    //         case IDLE:
-    //             food_dispense(dispensers[i], 0);
-    //             break;
-    //         case DISPENSE:
-    //             Serial.print("Dispenser ");
-    //             Serial.print(i);
-    //             Serial.println(" Dispensing");
-    //             food_dispense(dispensers[i], 1);
-    //             break;
-    //     };
-    // }
-    // // Run state machine for cup dispenser
-    // switch (dstates[NUM_DISPENSE]) {
-    //     case IDLE:
-    //         break;
-    //     case DISPENSE:
-    //         Serial.println("Cup Dispenser Dispensing");
-    //         cup_dispense();
-    //         dstates[NUM_DISPENSE] = IDLE;
-    //         break;
-    // };
 }
 
 // callback for received data
 void receiveData(int byteCount) {
-    int number;
-    int idx = 0;
     if (Wire.available()) {
         u_int8_t selector = Wire.read();
         if (Wire.available()) {
             uint8_t data = Wire.read();
+            dstates[selector-1] = data;
         }
     }
-    dstates[data[selector]] = data;
 }
 
 void sendData() {
-    // Polled by master
-    char* data = "Hello World";
-    Serial.println(data);
-    Wire.write(data, 11);
+    // Send state to master
+    Wire.write((const char*)&dstates, NUM_DISPENSE+1);
 }
 
 /************************
@@ -136,16 +117,19 @@ bool food_dispense(uint8_t pin, uint8_t on) {
 bool stepper_init() {
     stepper.begin(RPM);
     stepper.setEnableActiveState(LOW);
-    stepper.enable();
+    stepper.setSpeedProfile(stepper.LINEAR_SPEED, 1000, 1000);
+    /*
+     * Microstepping mode: 1, 2, 4, 8, 16 or 32
+     * Mode 1 is full speed.
+     * Mode 32 is 32 microsteps per step.
+     * The motor should rotate just as fast (at the set RPM)
+     */
     stepper.setMicrostep(MICROSTEPS);
+    stepper.enable();
     return true;
 }
 
 bool cup_dispense() {
-    stepper.rotate(60);  // 360 degrees / 6
+    stepper.startRotate(DEG_PER_CUP);
     return true;
 }
-
-bool read_temp(uint8_t pin, float* value) { return true; }
-
-
