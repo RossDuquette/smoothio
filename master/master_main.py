@@ -29,33 +29,14 @@ def main():
         # Receives the data from the User
         uin = input("Select Module: ")
         if uin == 1:
-            add = blender.ADD
-            blender.print_selectors()
-            selector = input("Selector number: ")
-            if selector == 0:
-                blender.read_data(bus)
-                continue
-            else:
-                blender.print_actions(selector)
+            blender.handle(bus)
         elif uin == 2:
-            add = carousel.ADD
+            carousel.handle(bus)
         elif uin == 3:
-            add = dispense.ADD
+            dispense.handle(bus)
         else:
             print "Wrong input. Please try again"
             continue
-
-        if selector == 255:
-            action = 0
-        else:
-            action = input("Action: ")
-
-        print """
-        ###########################
-        # Sending command to node #
-        ###########################
-        """
-        bus.write_i2c_block_data(add, selector, [action])
 
 if __name__ == '__main__':
     main()

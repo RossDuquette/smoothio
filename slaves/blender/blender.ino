@@ -19,7 +19,6 @@ void setup() {
     // initialize i2c as slave
     Serial.begin(9600);
     Wire.begin(SLAVE_ADDRESS);
-    Serial.println("Starting Blender Module");
 
     // pin setup
     pin_setup();
@@ -27,6 +26,9 @@ void setup() {
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
     Wire.onRequest(sendData);
+
+    // Init states
+    memset(&states, 0, sizeof(state_t));
 }
 
 void loop() {
@@ -37,7 +39,6 @@ void loop() {
             break;
         case B_ON:
             blender_control(BLEND_EN_0, HIGH);
-            Serial.println("Blender 0 on");
             break;
     }
     switch (states.blender1) {
@@ -46,7 +47,6 @@ void loop() {
             break;
         case B_ON:
             blender_control(BLEND_EN_1, HIGH);
-            Serial.println("Blender 1 on");
             break;
     }
 
@@ -57,11 +57,9 @@ void loop() {
             break;
         case P_CW:
             pivot_rotate(CW, PIVOT_SPEED);
-            Serial.println("Turning CW");
             break;
         case P_CCW:
             pivot_rotate(CCW, PIVOT_SPEED);
-            Serial.println("Turning blender CCW");
             break;
         case P_HOME:
             if (states.p_homed == 0) {
@@ -69,30 +67,29 @@ void loop() {
             } else {
                 pivot_setAngle(0);
             }
-            Serial.println("Homing pivot");
             break;
         case P_ROTATE_180:
             pivot_setAngle(180);
-            Serial.println("Rotating to 180");
             break;
     }
 
     // Elevator state machine
     switch (states.elevator) {
         case E_IDLE:
-            move_elevator(NEUTRAL, ELEV_SPEED);
+            elevator_move(NEUTRAL, ELEV_SPEED);
             break;
         case E_ASCEND:
-            move_elevator(UP, ELEV_SPEED);
-            Serial.println("Ascending elevator");
+            elevator_move(UP, ELEV_SPEED);
             break;
         case E_DESCEND:
-            move_elevator(DOWN, ELEV_SPEED);
-            Serial.println("Descending elevator");
+            elevator_move(DOWN, ELEV_SPEED);
             break;
         case E_HOME:
-            home_elev();
-            Serial.println("Homing elevator");
+            if (states.e_homed == 0) {
+                home_elev();
+            } else {
+                elevator_setHeight(ELEV_MAX_HEIGHT);
+            }
             break;
     }
 
@@ -101,13 +98,10 @@ void loop() {
         case R_IDLE:
             break;
         case R_BLEND_AND_CLEAN:
-            Serial.println("Blending and cleaning");
             break;
         case R_CLEAN:
-            Serial.println("Cleaning blender");
             break;
         case R_BLEND:
-            Serial.println("Blending");
             break;
     }
 
@@ -148,8 +142,7 @@ void receiveData(int byteCount) {
                     break;
                 case RESET:
                 default:
-                    // Set all states to IDLE
-                    memset(&states, 0, sizeof(state_t));
+                    state_setup();
                     break;
             }
         }
@@ -195,16 +188,46 @@ bool pin_setup() {
     attachInterrupt(digitalPinToInterrupt(PIVOT_ENC_B), pivot_enc_isr_B, RISING);
 }
 
+bool state_setup() {
+    memset(&states, 0, sizeof(state_t));
+    return true;
+}
+
 
 /********************
 *   Motor Control   *
 *********************/
 bool blender_control(uint8_t blender_pin, uint8_t on) {
-    digitalWrite(blender_pin, on);
+    static uint32_t duty[2] = {0,0};
+    const uint32_t MAX_DUTY = 2000;
+    uint8_t blend_id;
+    // Find blender ID
+    if (blender_pin == BLEND_EN_0) {
+        blend_id = 0;
+    } else {
+        blend_id = 1;
+    }
+    // Write to blender
+    if (on == 0) {
+        digitalWrite(blender_pin, 0);
+        duty[blend_id] = 0;
+        return true;
+    } else {
+        if (duty[blend_id] < MAX_DUTY) { // Soft start
+            digitalWrite(blender_pin, 1);
+            delayMicroseconds(duty[blend_id]);
+            digitalWrite(blender_pin, 0);
+            delayMicroseconds(MAX_DUTY-duty[blend_id]);
+            duty[blend_id]++;
+        } else {
+            digitalWrite(blender_pin, 1);
+        }
+    }
     return true;
 }
 
-bool move_elevator(uint8_t dir, uint8_t speed) {
+bool elevator_move(uint8_t dir, uint8_t speed) {
+    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
@@ -223,8 +246,31 @@ bool move_elevator(uint8_t dir, uint8_t speed) {
     return true;
 }
 
+bool elevator_setHeight(uint8_t height) {
+    if (states.e_homed == 0) {
+        return false;
+    }
+    // Check if at height
+    if (height == states.elevator_height) {
+        states.elevator = E_IDLE;
+        elevator_move(NEUTRAL, 0);
+        return true;
+    }
+    // Determine direction
+    uint8_t dir, speed;
+    if (height < states.elevator_height) {
+        dir = UP;
+    } else { // height > states.elevator_height
+        dir = DOWN;
+    }
+    // Determine speed, P control
+    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height);
+    elevator_move(dir, speed);
+    return true;
+}
+
 bool pivot_rotate(uint8_t dir, uint8_t speed) {
-    speed = max(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
+    speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
     if (dir == NEUTRAL) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, LOW);
@@ -261,6 +307,7 @@ bool pivot_setAngle(uint8_t degrees) {
     }
     // Determine speed, P control
     speed = PIVOT_GAIN*abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    pivot_rotate(dir, speed);
     return true;
 }
 
@@ -270,11 +317,12 @@ bool pivot_setAngle(uint8_t degrees) {
 **********************/
 bool home_elev() {
     if (states.limit1) {
-        move_elevator(NEUTRAL, ELEV_SPEED);
+        elevator_move(NEUTRAL, ELEV_SPEED);
         states.elevator = E_IDLE;
+        states.e_homed = 1;
         elev_position = 0;
     } else {
-        move_elevator(UP, ELEV_SPEED);
+        elevator_move(UP, ELEV_SPEED);
     }
 }
 
@@ -299,8 +347,10 @@ bool update_sensors() {
     states.limit2 = (uint8_t)pivot_limit();
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)((float)pivot_position*PIVOT_PULSE_RATIO);
-    // TO DO: Convert elevator encoder to height
+    states.pivot_deg = (uint8_t)(pivot_position*PIVOT_PULSE_RATIO);
+    states.elevator_height = (uint8_t)(elev_position*ELEV_PULSE_RATIO);
+    states.curr_sense0 = analogRead(CURR_SENSE0);
+    states.curr_sense1 = analogRead(CURR_SENSE1);
 }
 
 bool elev_limit() {
