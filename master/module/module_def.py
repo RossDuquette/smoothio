@@ -125,6 +125,9 @@ class Blender:
         i2cbus.write_i2c_block_data(self.ADD, selector, [action])
         print "\nCommand sent\n\n"
 
+    def send_command(self, i2cbus, selector, action):
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+
 
 ########################
 #       Carousel       #

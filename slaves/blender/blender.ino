@@ -316,7 +316,7 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (states.limit1) {
+    if (digitalRead(LIMIT_SENSE)) {
         elevator_move(NEUTRAL, ELEV_SPEED);
         states.elevator = E_IDLE;
         states.e_homed = 1;
@@ -327,7 +327,7 @@ bool home_elev() {
 }
 
 bool home_pivot() {
-    if (states.limit2) {
+    if (digitalRead(LIMIT_SENSE_2)) {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
