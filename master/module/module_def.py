@@ -73,7 +73,7 @@ class Blender:
         print "Limit Switch 1: {}".format(self.limit1)
         print "Limit Switch 2: {}".format(self.limit2)
         print "Current Sense 0: {}".format(self.curr_sense0)
-        print "Current Sense 1: {}".format(self.curr_sense1)
+        print "Current Sense 1: {}\n".format(self.curr_sense1)
 
 
     # Selectors
