@@ -227,7 +227,22 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
+    static uint8_t prev_speed = 0;
+    const uint8_t ACCEL_DELAY = 40, DECEL_DELAY = 1;
+    const uint8_t ACCEL_INC = 1, DECEL_DEC = 10;
+    // Add stiction, ramp speed
     speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
+//    if (speed > prev_speed) {
+//        prev_speed += ACCEL_INC;
+//        speed = prev_speed;
+//        delay(ACCEL_DELAY);
+//    }
+//    else if (speed < prev_speed && prev_speed > DECEL_DEC) {
+//        prev_speed -= DECEL_DEC;
+//        speed = prev_speed;
+//        delay(DECEL_DELAY);
+//    }
+    // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
