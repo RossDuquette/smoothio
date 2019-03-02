@@ -116,6 +116,6 @@ typedef struct state_t {
 #define ELEV_STICTION 0
 #define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
 #define ELEV_PULSE_RATIO 12 // TO DO: mm/pulse
-#define ELEV_SPEED 5
-#define ELEV_MAX_SPEED 200
-#define ELEV_MAX_HEIGHT 255
+#define ELEV_SPEED 255
+#define ELEV_MAX_SPEED 255
+#define ELEV_MAX_HEIGHT 200
