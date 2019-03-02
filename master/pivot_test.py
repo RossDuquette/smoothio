@@ -16,14 +16,14 @@ def main():
         for i in range(2):
             blender.send_command(bus,3,1) # Pivot CW
             sleep(1)
-            blender.send_command(bus,3,0) # Pivot IDLE
             blender.read_data(bus)
-            sleep(3)
+            blender.send_command(bus,3,0) # Pivot IDLE
+            sleep(1)
             blender.send_command(bus,3,2) # Pivot CCW
             sleep(1)
-            blender.send_command(bus,3,0) # Pivot IDLE
             blender.read_data(bus)
-            sleep(3)
+            blender.send_command(bus,3,0) # Pivot IDLE
+            sleep(1)
         blender.send_command(bus,3,0) # Pivot IDLE
     except KeyboardInterrupt:
         blender.send_command(bus,3,0) # Pivot IDLE
