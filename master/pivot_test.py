@@ -1,5 +1,6 @@
 import sys
 from time import sleep
+import smbus
 import module.module_def as mods
 
 # I2C channel 1 is connected to the GPIO pins
