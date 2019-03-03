@@ -365,8 +365,8 @@ bool update_sensors() {
     states.limit2 = (uint8_t)pivot_limit();
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)(-8.7);
+    states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO);
+    states.elevator_height = (uint8_t)round(-8.7);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
 }
