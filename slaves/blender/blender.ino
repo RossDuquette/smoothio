@@ -149,7 +149,10 @@ void receiveData(int byteCount) {
     }
 }
 
-void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
+void sendData() { 
+    update_sensors();
+    Wire.write((const char*)&states, sizeof(state_t)); 
+}
 
 
 /************************
@@ -362,8 +365,8 @@ bool update_sensors() {
     states.limit2 = (uint8_t)pivot_limit();
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)pivot_position;//(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)(elev_position*ELEV_PULSE_RATIO);
+    states.pivot_deg = (uint8_t)(pivot_position*PIVOT_PULSE_RATIO);
+    states.elevator_height = (uint8_t)(-8.7);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
 }
@@ -413,4 +416,6 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
+
+
 
