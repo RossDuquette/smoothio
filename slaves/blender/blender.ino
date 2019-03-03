@@ -149,7 +149,10 @@ void receiveData(int byteCount) {
     }
 }
 
-void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
+void sendData() { 
+    update_sensors();
+    Wire.write((const char*)&states, sizeof(state_t)); 
+}
 
 
 /************************
@@ -228,6 +231,7 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
     speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
+    // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
@@ -347,8 +351,8 @@ bool update_sensors() {
     states.limit2 = (uint8_t)pivot_limit();
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)(elev_position*ELEV_PULSE_RATIO);
+    states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO);
+    states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
 }

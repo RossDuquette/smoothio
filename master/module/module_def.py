@@ -77,7 +77,7 @@ class Blender:
         print "Routine: {}".format(self.routine_states[self.routine])
         print "Pivot Homed: {}".format(self.p_homed)
         print "Elevator Homed: {}".format(self.e_homed)
-        print "Pivot Angle: {} degrees".format(self.pivot_deg)
+        print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
         print "Elevator Height: {}cm".format(self.elevator_height)
         print "Elevator Limit: {}".format(self.limit1)
         print "Pivot Limit: {}".format(self.limit2)
