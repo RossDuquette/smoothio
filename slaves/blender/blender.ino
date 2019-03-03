@@ -65,11 +65,11 @@ void loop() {
             if (states.p_homed == 0) {
                 home_pivot();
             } else {
-                pivot_setAngle(0);
+                pivot_setAngle(PIVOT_OFFSET);
             }
             break;
         case P_ROTATE_180:
-            pivot_setAngle(180);
+            pivot_setAngle(180+PIVOT_OFFSET);
             break;
     }
 
@@ -293,21 +293,21 @@ bool pivot_rotate(uint8_t dir, uint8_t speed) {
 }
 
 bool pivot_setAngle(uint8_t degrees) {
+    static uint8_t dir, speed;
     if (states.p_homed == 0) {
         return false;
     }
     // Check if at angle
-    if (degrees == states.pivot_deg) {
+    if (states.pivot_deg == degrees) {
         states.pivot = P_IDLE;
         pivot_rotate(NEUTRAL, 0);
         return true;
     }
     // Determine direction
-    uint8_t dir, speed;
-    if (degrees < states.pivot_deg) {
-        dir = CW;
-    } else { // degrees > states.pivot_deg
+    if (states.pivot_deg > degrees) {
         dir = CCW;
+    } else { // states.pivot_deg < degrees
+        dir = CW;
     }
     // Determine speed, P control
     speed = PIVOT_GAIN*abs((int16_t)degrees-(int16_t)states.pivot_deg);
@@ -335,7 +335,7 @@ bool home_pivot() {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
-        pivot_position = 0; // Reset encoder counter
+        pivot_position = round(PIVOT_OFFSET/PIVOT_PULSE_RATIO); // Reset encoder counter, with offset
     } else {
         pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
     }
