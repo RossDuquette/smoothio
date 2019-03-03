@@ -230,21 +230,7 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
-    static uint8_t prev_speed = 0;
-    const uint8_t ACCEL_DELAY = 40, DECEL_DELAY = 1;
-    const uint8_t ACCEL_INC = 1, DECEL_DEC = 10;
-    // Add stiction, ramp speed
     speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
-//    if (speed > prev_speed) {
-//        prev_speed += ACCEL_INC;
-//        speed = prev_speed;
-//        delay(ACCEL_DELAY);
-//    }
-//    else if (speed < prev_speed && prev_speed > DECEL_DEC) {
-//        prev_speed -= DECEL_DEC;
-//        speed = prev_speed;
-//        delay(DECEL_DELAY);
-//    }
     // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
@@ -366,7 +352,7 @@ bool update_sensors() {
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
     states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)round(-8.7);
+    states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
 }
@@ -416,7 +402,3 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
-
-
-
-
