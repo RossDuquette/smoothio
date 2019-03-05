@@ -293,7 +293,9 @@ bool pivot_rotate(uint8_t dir, uint8_t speed) {
 }
 
 bool pivot_setAngle(uint8_t degrees) {
-    static uint8_t dir, speed;
+    uint8_t dir, speed;
+    uint16_t e;
+    static uint16_t integral = 0;
     if (states.p_homed == 0) {
         return false;
     }
@@ -301,6 +303,7 @@ bool pivot_setAngle(uint8_t degrees) {
     if (states.pivot_deg == degrees) {
         states.pivot = P_IDLE;
         pivot_rotate(NEUTRAL, 0);
+        integral = 0;
         return true;
     }
     // Determine direction
@@ -309,9 +312,12 @@ bool pivot_setAngle(uint8_t degrees) {
     } else { // states.pivot_deg < degrees
         dir = CW;
     }
-    // Determine speed, P control
-    speed = PIVOT_GAIN*abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    // Determine speed, PI control
+    e = abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    integral += e;
+    speed = min(0xFF, round(e*PIVOT_KP + integral*PIVOT_KI));
     pivot_rotate(dir, speed);
+    delay(1); // Don't let integral grow too quickly
     return true;
 }
 

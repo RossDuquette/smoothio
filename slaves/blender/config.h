@@ -103,7 +103,8 @@ typedef struct state_t {
 #define DOWN 4
 
 // Pivot parameters
-#define PIVOT_GAIN 1
+#define PIVOT_KP 1
+#define PIVOT_KI 0.01
 #define PIVOT_STICTION 15
 #define PIVOT_GEAR_RATIO (298*80/35.0) // Gear motor and external gears
 #define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*6) // Pulses/rev
