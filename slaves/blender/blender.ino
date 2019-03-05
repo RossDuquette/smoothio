@@ -230,23 +230,23 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
-    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
     // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, 0);
+        speed = 0;
     } else if (dir == UP) { // CW
         digitalWrite(ELEV_IN_A, HIGH);
         digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, speed);
+        speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
     } else if (dir == DOWN) { // CCW
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, HIGH);
-        analogWrite(ELEV_PWM, speed);
+        speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
     } else {
         return false;
     }
+    analogWrite(ELEV_PWM, speed);
     return true;
 }
 
@@ -263,9 +263,9 @@ bool elevator_setHeight(uint8_t height) {
     // Determine direction
     uint8_t dir, speed;
     if (height < states.elevator_height) {
-        dir = UP;
-    } else { // height > states.elevator_height
         dir = DOWN;
+    } else { // height > states.elevator_height
+        dir = UP;
     }
     // Determine speed, P control
     speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height);
@@ -274,17 +274,18 @@ bool elevator_setHeight(uint8_t height) {
 }
 
 bool pivot_rotate(uint8_t dir, uint8_t speed) {
-    speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
     if (dir == NEUTRAL) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, LOW);
         speed = 0;
     } else if (dir == CW) {
-        digitalWrite(PIVOT_IN_A, HIGH);
-        digitalWrite(PIVOT_IN_B, LOW);
-    } else if (dir == CCW) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, HIGH);
+        speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
+    } else if (dir == CCW) {
+        digitalWrite(PIVOT_IN_A, HIGH);
+        digitalWrite(PIVOT_IN_B, LOW);
+        speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
     } else {
         return false;
     }
@@ -301,8 +302,8 @@ bool pivot_setAngle(uint8_t degrees) {
     }
     // Check if at angle
     if (states.pivot_deg == degrees) {
-        states.pivot = P_IDLE;
         pivot_rotate(NEUTRAL, 0);
+        states.pivot = P_IDLE;
         integral = 0;
         return true;
     }
