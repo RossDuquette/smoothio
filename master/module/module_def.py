@@ -94,6 +94,7 @@ class Blender:
         """
         for key,val in self.blender_selectors.items():
             print "        {} : {}".format(key,val)
+        print ""
 
     # Actions
     def print_actions(self, selector):
@@ -187,6 +188,7 @@ class Carousel:
         """
         for key,val in self.carousel_selectors.items():
             print "        {} : {}".format(key,val)
+        print ""
 
     # Main handle
     def handle(self, i2cbus):
@@ -263,6 +265,7 @@ class Dispense:
         """
         for key,val in self.dispense_selectors.items():
             print "        {} : {}".format(key,val)
+        print ""
 
     # Print actions
     def print_actions(self):
@@ -272,6 +275,7 @@ class Dispense:
         """
         for key,val in self.dispense_actions.items():
             print "        {} : {}".format(key,val)
+        print ""
     
     # Main handle
     def handle(self, i2cbus):
