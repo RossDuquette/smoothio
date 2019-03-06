@@ -151,7 +151,7 @@ class Carousel:
     # Init variables
     def __init__(self):
         self.ADD = 0x05
-        self.num_slots = 6
+        self.num_slots = 5
         self.block_size = 8
         self.c_state = 0
         self.num_cups = 0
