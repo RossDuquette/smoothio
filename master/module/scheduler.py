@@ -2,24 +2,76 @@
 # Definition of Scheduler #
 ###########################
 import module.module_def as mods
+import time
 
 class Scheduler:
+    FROZEN_DISPENSE_TIME = 5
+    LIQUID_DISPENSE_TIME = 5
+
     def __init__(self):
-        blender = mods.Blender()
-        carousel = mods.Carousel()
-        dispense = mods.Dispense()
-        cup_posns = []
-        cup_states = [False for _ in range(carousel.num_slots)]
+        self.blender = mods.Blender()
+        self.carousel = mods.Carousel()
+        self.dispense = mods.Dispense()
+        self.bus = smbus.SMBus(1)
 
-    def enqueue_smoothie(): 
-        cup_posns.append(0)
+        self.cup_posns = []
+        self.cup_states = [True for _ in range(carousel.num_slots)]
 
-    def empty():
-        if len(cup_posns) == 0:
+        self.frozen_time = time.time()
+        self.liquid_time = time.time()
+
+    def enqueue_smoothie(self): 
+        self.cup_posns.append(0)
+        self.cup_states[0] = False
+
+    def empty(self):
+        if len(self.cup_posns) == 0:
             return True
         return False
 
-    def update():
-        return
+    def update(self):
+        for cp in self.cup_posns:
+            if cp == 0:
+                # Send cup dispense command
+                self.dispense.send_command(7, 1)
+                self.cup_states[0] = False
+            elif cp == 1:
+                # Send frozen dispense commands
+                self.dispense.send_command(1, 1)
+                self.dispense.send_command(2, 1)
+                self.dispense.send_command(3, 1)
+                self.frozen_time = time.time() + FROZEN_DISPENSE_TIME
+                self.cup_states[1] = False
+            elif cp == 2:
+                # Send liquid dispense commands
+                self.dispense.send_command(4, 1)
+                self.dispense.send_command(5, 1)
+                self.dispense.send_command(6, 1)
+                self.liquid_time = time.time() + LIQUID_DISPENSE_TIME
+                self.cup_states[2] = False
+            elif cp == 3:
+                # TODO: BLENDER ROUTINE
+                self.cup_states[3] = True
+            elif cp == 4:
+                # Wait for cup to be taken 
+                self.cup_states[4] = False
 
+        all_stations_go = True
+        while not all_stations_go:
+
+            # Check if all states are idle
+            for cs in self.cup_states:
+                if cs == False:
+                    all_stations_go = False
+
+        # Rotate carousel one spot, adjust states
+        self.carousel.send_command(bus, 1, 1)
+        for i, cp in enumerate(self.cup_posns):
+            if cp >= 5:
+                self.cup_posns.pop(i)
+            else:
+                self.cup_posns[i] += 1
+
+    def blender_state(self):
+        return 
 
