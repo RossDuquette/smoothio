@@ -121,4 +121,3 @@ typedef struct state_t {
 #define ELEV_SPEED 255
 #define ELEV_MAX_SPEED 255
 #define ELEV_MAX_HEIGHT 200
-
