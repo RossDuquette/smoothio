@@ -201,8 +201,8 @@ bool state_setup() {
 *   Motor Control   *
 *********************/
 bool blender_control(uint8_t blender_pin, uint8_t on) {
-    static uint32_t duty[2] = {0,0};
-    const uint32_t MAX_DUTY = 2000;
+    static uint16_t duty[2] = {0,0};
+    const uint16_t MAX_DUTY = 2000;
     uint8_t blend_id;
     // Find blender ID
     if (blender_pin == BLEND_EN_0) {
@@ -230,6 +230,7 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
+    static uint8_t prev_speed = 0;
     // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
@@ -246,7 +247,10 @@ bool elevator_move(uint8_t dir, uint8_t speed) {
     } else {
         return false;
     }
+    speed = (speed > prev_speed) ? prev_speed+1 : speed;
     analogWrite(ELEV_PWM, speed);
+    delay(2);
+    prev_speed = speed;
     return true;
 }
 
@@ -409,3 +413,4 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
+
