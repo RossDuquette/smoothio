@@ -103,19 +103,21 @@ typedef struct state_t {
 #define DOWN 4
 
 // Pivot parameters
-#define PIVOT_GAIN 1
-#define PIVOT_STICTION 0
-#define PIVOT_GEAR_RATIO (30*80/35.0) // Gear motor and external gears
-#define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*24) // Pulses/rev
-#define PIVOT_PULSE_RATIO (360/(float)PIVOT_PULSES_REV) // Degrees/pulse
-#define PIVOT_SPEED 5
-#define PIVOT_MAX_SPEED 200
+#define PIVOT_KP 1
+#define PIVOT_KI 0.01
+#define PIVOT_STICTION 15
+#define PIVOT_GEAR_RATIO (298*80/35.0) // Gear motor and external gears
+#define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*6) // Pulses/rev
+#define PIVOT_PULSE_RATIO (360.0/(float)PIVOT_PULSES_REV) // Degrees/pulse
+#define PIVOT_SPEED 35
+#define PIVOT_MAX_SPEED 255
+#define PIVOT_OFFSET 10 // Reduces the chances of wrap-around
 
 // Elevator parameters
 #define ELEV_GAIN 1
 #define ELEV_STICTION 0
 #define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
-#define ELEV_PULSE_RATIO 12 // TO DO: mm/pulse
-#define ELEV_SPEED 5
-#define ELEV_MAX_SPEED 200
+#define ELEV_PULSE_RATIO 1 // TO DO: mm/pulse
+#define ELEV_SPEED 255
+#define ELEV_MAX_SPEED 255
 #define ELEV_MAX_HEIGHT 200

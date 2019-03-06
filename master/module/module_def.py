@@ -3,6 +3,15 @@
 #################################################
 
 class Blender:
+    blender_selectors = {
+        0 : "Read state",
+        1 : "Blender 0",
+        2 : "Blender 1",
+        3 : "Pivot",
+        4 : "Elevator",
+        5 : "Routine",
+        255 : "Reset"
+    }
     blender_states = {
         0 : "IDLE",
         1 : "ON"
@@ -31,6 +40,7 @@ class Blender:
     def __init__(self):
         self.ADD = 0x04
         self.block_size = 13
+        self.pivot_offset = 10
         self.blender0 = 0
         self.blender1 = 0
         self.elevator = 0
@@ -55,7 +65,7 @@ class Blender:
         self.routine = data[4]
         self.p_homed = data[5]
         self.e_homed = data[6]
-        self.pivot_deg = data[7]
+        self.pivot_deg = data[7]-self.pivot_offset
         self.elevator_height = data[8]
         self.limit1 = data[9]
         self.limit2 = data[10]
@@ -68,27 +78,23 @@ class Blender:
         print "Routine: {}".format(self.routine_states[self.routine])
         print "Pivot Homed: {}".format(self.p_homed)
         print "Elevator Homed: {}".format(self.e_homed)
-        print "Pivot Angle: {} degrees".format(self.pivot_deg)
+        print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
         print "Elevator Height: {}cm".format(self.elevator_height)
-        print "Limit Switch 1: {}".format(self.limit1)
-        print "Limit Switch 2: {}".format(self.limit2)
+        print "Elevator Limit: {}".format(self.limit1)
+        print "Pivot Limit: {}".format(self.limit2)
         print "Current Sense 0: {}".format(self.curr_sense0)
-        print "Current Sense 1: {}".format(self.curr_sense1)
+        print "Current Sense 1: {}\n".format(self.curr_sense1)
 
 
     # Selectors
     def print_selectors(self):
         print """
-        Selector Numbers
+        Selectors
         --------------
-        0: Read state
-        1: Blender 0
-        2: Blender 1
-        3: Pivot
-        4: Elevator
-        5: Routine
-        255: Reset
         """
+        for key,val in self.blender_selectors.items():
+            print "        {} : {}".format(key,val)
+        print ""
 
     # Actions
     def print_actions(self, selector):
@@ -122,8 +128,11 @@ class Blender:
             action = input("Action: ")
         else:
             action = 0
-        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        self.send_command(i2cbus,selector,action)
         print "\nCommand sent\n\n"
+
+    def send_command(self, i2cbus, selector, action):
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
 
 
 ########################
@@ -169,7 +178,7 @@ class Carousel:
         print "Cup Mass 0: {}".format(self.cup_mass0)
         print "Cup Mass 1: {}".format(self.cup_mass1)
         print "Homing Sensor: {}".format(self.carousel_pos)
-        print "Homed: {}".format(self.homed)
+        print "Homed: {}\n".format(self.homed)
 
     # Selectors
     def print_selectors(self):
@@ -179,6 +188,7 @@ class Carousel:
         """
         for key,val in self.carousel_selectors.items():
             print "        {} : {}".format(key,val)
+        print ""
 
     # Main handle
     def handle(self, i2cbus):
@@ -191,8 +201,11 @@ class Carousel:
             action = input("Number of slots to rotate: ")
         else:
             action = 0
-        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        self.send_command(i2cbus,selector,action)
         print "\nCommand sent\n\n"
+
+    def send_command(self, i2cbus, selector, action):
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
 
 
 #######################
@@ -242,7 +255,7 @@ class Dispense:
         print "Liquid 1: {}".format(self.dispense_actions[self.L1])
         print "Liquid 2: {}".format(self.dispense_actions[self.L2])
         print "Liquid 3: {}".format(self.dispense_actions[self.L3])
-        print "Cup Dispense: {}".format(self.dispense_actions[self.cup])
+        print "Cup Dispense: {}\n".format(self.dispense_actions[self.cup])
 
     # Print selectors
     def print_selectors(self):
@@ -252,6 +265,7 @@ class Dispense:
         """
         for key,val in self.dispense_selectors.items():
             print "        {} : {}".format(key,val)
+        print ""
 
     # Print actions
     def print_actions(self):
@@ -261,6 +275,7 @@ class Dispense:
         """
         for key,val in self.dispense_actions.items():
             print "        {} : {}".format(key,val)
+        print ""
     
     # Main handle
     def handle(self, i2cbus):
@@ -274,5 +289,8 @@ class Dispense:
             action = input("Action: ")
         else:
             action = 0
-        i2cbus.write_i2c_block_data(self.ADD, selector, [action])
+        self.send_command(i2cbus,selector,action)
         print "\nCommand sent\n\n"
+
+    def send_command(self, i2cbus, selector, action):
+        i2cbus.write_i2c_block_data(self.ADD, selector, [action])

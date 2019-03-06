@@ -56,6 +56,7 @@ void loop() {
             break;
         case DISABLE:
             stepper.disable();
+            states.c_state = IDLE;
             break;
         case IDLE:
         default:
@@ -108,7 +109,6 @@ bool stepper_init() {
      * The motor should rotate just as fast (at the set RPM)
      */
     stepper.setMicrostep(MICROSTEPS);
-    stepper.enable();
     return true;
 }
 

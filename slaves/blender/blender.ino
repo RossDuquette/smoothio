@@ -65,11 +65,11 @@ void loop() {
             if (states.p_homed == 0) {
                 home_pivot();
             } else {
-                pivot_setAngle(0);
+                pivot_setAngle(PIVOT_OFFSET);
             }
             break;
         case P_ROTATE_180:
-            pivot_setAngle(180);
+            pivot_setAngle(180+PIVOT_OFFSET);
             break;
     }
 
@@ -149,7 +149,10 @@ void receiveData(int byteCount) {
     }
 }
 
-void sendData() { Wire.write((const char*)&states, sizeof(state_t)); }
+void sendData() { 
+    update_sensors();
+    Wire.write((const char*)&states, sizeof(state_t)); 
+}
 
 
 /************************
@@ -198,8 +201,8 @@ bool state_setup() {
 *   Motor Control   *
 *********************/
 bool blender_control(uint8_t blender_pin, uint8_t on) {
-    static uint32_t duty[2] = {0,0};
-    const uint32_t MAX_DUTY = 2000;
+    static uint16_t duty[2] = {0,0};
+    const uint16_t MAX_DUTY = 2000;
     uint8_t blend_id;
     // Find blender ID
     if (blender_pin == BLEND_EN_0) {
@@ -227,22 +230,39 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
-    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
+    static uint16_t duty = 0;
+    static uint8_t duty_count = 0;
+    const uint16_t MAX_DUTY = 125;
+    // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, 0);
+        duty = 0;
+        return true;
     } else if (dir == UP) { // CW
         digitalWrite(ELEV_IN_A, HIGH);
         digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, speed);
     } else if (dir == DOWN) { // CCW
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, HIGH);
-        analogWrite(ELEV_PWM, speed);
     } else {
         return false;
     }
+    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
+//    if (duty < MAX_DUTY) {
+//        digitalWrite(ELEV_PWM, 1);
+//        delayMicroseconds(duty);
+//        digitalWrite(ELEV_PWM, 0);
+//        delayMicroseconds(MAX_DUTY-duty);
+//        if (duty_count&0x07 == 0) {
+//            duty++;
+//        }
+//        duty_count++;
+//    } else {
+//        digitalWrite(ELEV_PWM, 1);
+//    }
+    analogWrite(ELEV_PWM, speed);
     return true;
 }
 
@@ -259,9 +279,9 @@ bool elevator_setHeight(uint8_t height) {
     // Determine direction
     uint8_t dir, speed;
     if (height < states.elevator_height) {
-        dir = UP;
-    } else { // height > states.elevator_height
         dir = DOWN;
+    } else { // height > states.elevator_height
+        dir = UP;
     }
     // Determine speed, P control
     speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height);
@@ -270,17 +290,18 @@ bool elevator_setHeight(uint8_t height) {
 }
 
 bool pivot_rotate(uint8_t dir, uint8_t speed) {
-    speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
     if (dir == NEUTRAL) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, LOW);
         speed = 0;
     } else if (dir == CW) {
-        digitalWrite(PIVOT_IN_A, HIGH);
-        digitalWrite(PIVOT_IN_B, LOW);
-    } else if (dir == CCW) {
         digitalWrite(PIVOT_IN_A, LOW);
         digitalWrite(PIVOT_IN_B, HIGH);
+        speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
+    } else if (dir == CCW) {
+        digitalWrite(PIVOT_IN_A, HIGH);
+        digitalWrite(PIVOT_IN_B, LOW);
+        speed = min(PIVOT_MAX_SPEED, speed+PIVOT_STICTION);
     } else {
         return false;
     }
@@ -289,25 +310,31 @@ bool pivot_rotate(uint8_t dir, uint8_t speed) {
 }
 
 bool pivot_setAngle(uint8_t degrees) {
+    uint8_t dir, speed;
+    uint16_t e;
+    static uint16_t integral = 0;
     if (states.p_homed == 0) {
         return false;
     }
     // Check if at angle
-    if (degrees == states.pivot_deg) {
-        states.pivot = P_IDLE;
+    if (states.pivot_deg == degrees) {
         pivot_rotate(NEUTRAL, 0);
+        states.pivot = P_IDLE;
+        integral = 0;
         return true;
     }
     // Determine direction
-    uint8_t dir, speed;
-    if (degrees < states.pivot_deg) {
-        dir = CW;
-    } else { // degrees > states.pivot_deg
+    if (states.pivot_deg > degrees) {
         dir = CCW;
+    } else { // states.pivot_deg < degrees
+        dir = CW;
     }
-    // Determine speed, P control
-    speed = PIVOT_GAIN*abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    // Determine speed, PI control
+    e = abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    integral += e;
+    speed = min(0xFF, round(e*PIVOT_KP + integral*PIVOT_KI));
     pivot_rotate(dir, speed);
+    delay(1); // Don't let integral grow too quickly
     return true;
 }
 
@@ -316,7 +343,7 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (states.limit1) {
+    if (digitalRead(LIMIT_SENSE)) {
         elevator_move(NEUTRAL, ELEV_SPEED);
         states.elevator = E_IDLE;
         states.e_homed = 1;
@@ -327,11 +354,11 @@ bool home_elev() {
 }
 
 bool home_pivot() {
-    if (states.limit2) {
+    if (digitalRead(LIMIT_SENSE_2)) {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
-        pivot_position = 0; // Reset encoder counter
+        pivot_position = round(PIVOT_OFFSET/PIVOT_PULSE_RATIO); // Reset encoder counter, with offset
     } else {
         pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
     }
@@ -347,8 +374,8 @@ bool update_sensors() {
     states.limit2 = (uint8_t)pivot_limit();
     // Convert pivot encoder to angle
     // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)(elev_position*ELEV_PULSE_RATIO);
+    states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO);
+    states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
 }
@@ -398,3 +425,4 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
+
