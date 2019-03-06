@@ -58,6 +58,16 @@ class Scheduler:
 
         all_stations_go = True
         while not all_stations_go:
+            if time.time() >= self.frozen_time:
+                self.dispense.send_command(1, 0)
+                self.dispense.send_command(2, 0)
+                self.dispense.send_command(3, 0) 
+                self.cup_states[1] = True
+            if time.time() >= self.liquid_time:
+                self.dispense.send_command(4, 0)
+                self.dispense.send_command(5, 0)
+                self.dispense.send_command(6, 0) 
+                self.cup_states[2] = True
 
             # Check if all states are idle
             for cs in self.cup_states:
