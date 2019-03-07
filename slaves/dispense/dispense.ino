@@ -6,7 +6,8 @@
 #include <Wire.h>
 #include "config.h"
 
-DRV8825 stepper(MOTOR_STEPS, DIR, STEP, nEN, M0, M1, M2);
+// Initialize with pin sequence IN1-IN3-IN2-IN4 for using the AccelStepper with 28BYJ-48
+AccelStepper stepper1(HALFSTEP, motorPin1, motorPin3, motorPin2, motorPin4);
 // States for each cup dispense +1  for the cup dispenser
 uint8_t dstates[NUM_DISPENSE + 1];
 
@@ -117,28 +118,25 @@ bool food_dispense(uint8_t pin, uint8_t on) {
 }
 
 bool stepper_init() {
-    stepper.begin(RPM);
-    stepper.setEnableActiveState(LOW);
-    stepper.setSpeedProfile(stepper.LINEAR_SPEED, 1000, 1000);
-    /*
-     * Microstepping mode: 1, 2, 4, 8, 16 or 32
-     * Mode 1 is full speed.
-     * Mode 32 is 32 microsteps per step.
-     * The motor should rotate just as fast (at the set RPM)
-     */
-    stepper.setMicrostep(MICROSTEPS);
-    stepper.enable();
+    stepper1.setMaxSpeed(1000.0);
+    stepper1.setAcceleration(1000.0);
+    stepper1.setSpeed(300);
+    stepper1.moveTo(0);
     return true;
 }
 
 bool cup_dispense() {
     static uint8_t dispensing = 0;
-    if (dispensing == 0) {
-        stepper.startRotate(DEG_PER_CUP);
-        dispensing = 1;
-    } else if (stepper.nextAction() == 0) { // Done dispensing
-        dispensing = 0;
-        dstates[NUM_DISPENSE] = IDLE;
+    if (stepper1.distanceToGo() == 0) { 
+        if (dispensing == 0) { // Start dispensing
+            stepper1.moveTo(stepper1.currentPosition()+STEP_OFFSET);
+            dispensing = 1;
+        } else { // Done dispensing
+            dispensing = 0;
+            dstates[NUM_DISPENSE] = IDLE;
+        }
+    } else {
+        stepper1.run();
     }
     return true;
 }

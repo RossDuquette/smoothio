@@ -325,9 +325,9 @@ bool pivot_setAngle(uint8_t degrees) {
     }
     // Determine direction
     if (states.pivot_deg > degrees) {
-        dir = CCW;
-    } else { // states.pivot_deg < degrees
         dir = CW;
+    } else { // states.pivot_deg < degrees
+        dir = CCW;
     }
     // Determine speed, PI control
     e = abs((int16_t)degrees-(int16_t)states.pivot_deg);
