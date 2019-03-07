@@ -4,6 +4,7 @@
 
 import smbus
 import module.module_def as mods
+import module.scheduler as scdr
 
 # I2C channel 1 is connected to the GPIO pins
 channel = 1
@@ -15,6 +16,7 @@ def print_modules():
     print """
         Module Numbers
         --------------
+        Smoothie: 0
         Blender:  1
         Carousel: 2
         Dispense: 3
@@ -24,6 +26,8 @@ def main():
     blender = mods.Blender()
     carousel = mods.Carousel()
     dispense = mods.Dispense()
+    scheduler = scdr.Scheduler()
+
     while True:
         print_modules()
         # Receives the data from the User
