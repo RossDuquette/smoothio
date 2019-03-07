@@ -79,10 +79,16 @@ void loop() {
             elevator_move(NEUTRAL, ELEV_SPEED);
             break;
         case E_ASCEND:
-            elevator_move(UP, ELEV_SPEED);
+            for (uint8_t i = 0; i < 255; i++) {
+                elevator_move(UP, i);
+                delayMicroseconds(1000);
+            }
             break;
         case E_DESCEND:
-            elevator_move(DOWN, ELEV_SPEED);
+            for (uint8_t i = 0; i < 255; i++) {
+                elevator_move(DOWN, i);
+                delayMicroseconds(1000);
+            }
             break;
         case E_HOME:
             if (states.e_homed == 0) {
