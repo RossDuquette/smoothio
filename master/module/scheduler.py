@@ -6,8 +6,8 @@ import time
 import smbus
 
 class Scheduler:
-    FROZEN_DISPENSE_TIME = 5
-    LIQUID_DISPENSE_TIME = 5
+    FROZEN_DISPENSE_TIME = 1
+    LIQUID_DISPENSE_TIME = 1
 
     def __init__(self):
         self.blender = mods.Blender()
@@ -35,28 +35,29 @@ class Scheduler:
             if cp == 0:
                 # Send cup dispense command
                 self.dispense.send_command(self.bus, 7, 1)
-                self.cup_states[0] = False
+                self.cup_states[0] = True
             elif cp == 1:
                 # Send frozen dispense commands
                 self.dispense.send_command(self.bus, 1, 1)
                 self.dispense.send_command(self.bus, 2, 1)
                 self.dispense.send_command(self.bus, 3, 1)
-                self.frozen_time = time.time() + FROZEN_DISPENSE_TIME
+                self.frozen_time = time.time() + self.FROZEN_DISPENSE_TIME
                 self.cup_states[1] = False
             elif cp == 2:
                 # Send liquid dispense commands
                 self.dispense.send_command(self.bus, 4, 1)
                 self.dispense.send_command(self.bus, 5, 1)
                 self.dispense.send_command(self.bus, 6, 1)
-                self.liquid_time = time.time() + LIQUID_DISPENSE_TIME
+                self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME
                 self.cup_states[2] = False
             elif cp == 3:
                 # TODO: BLENDER ROUTINE
                 self.cup_states[3] = True
             elif cp == 4:
                 # Wait for cup to be taken 
-                self.cup_states[4] = False
+                self.cup_states[4] = True
 
+        all_stations_go = False
         while not all_stations_go:
             # Check cup dispense
             if not self.cup_states[0] and cup_dispense_done():
