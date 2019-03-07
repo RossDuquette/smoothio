@@ -79,16 +79,10 @@ void loop() {
             elevator_move(NEUTRAL, ELEV_SPEED);
             break;
         case E_ASCEND:
-            for (uint8_t i = 0; i < 255; i++) {
-                elevator_move(UP, i);
-                delayMicroseconds(1000);
-            }
+            elevator_move(UP, ELEV_SPEED);
             break;
         case E_DESCEND:
-            for (uint8_t i = 0; i < 255; i++) {
-                elevator_move(DOWN, i);
-                delayMicroseconds(1000);
-            }
+            elevator_move(DOWN, ELEV_SPEED);
             break;
         case E_HOME:
             if (states.e_homed == 0) {
@@ -236,9 +230,6 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint8_t speed) {
-    static uint16_t duty = 0;
-    static uint8_t duty_count = 0;
-    const uint16_t MAX_DUTY = 125;
     // Write to pins
     if (dir == NEUTRAL || speed == 0) {
         digitalWrite(ELEV_IN_A, LOW);
@@ -256,18 +247,6 @@ bool elevator_move(uint8_t dir, uint8_t speed) {
         return false;
     }
     speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
-//    if (duty < MAX_DUTY) {
-//        digitalWrite(ELEV_PWM, 1);
-//        delayMicroseconds(duty);
-//        digitalWrite(ELEV_PWM, 0);
-//        delayMicroseconds(MAX_DUTY-duty);
-//        if (duty_count&0x07 == 0) {
-//            duty++;
-//        }
-//        duty_count++;
-//    } else {
-//        digitalWrite(ELEV_PWM, 1);
-//    }
     analogWrite(ELEV_PWM, speed);
     return true;
 }

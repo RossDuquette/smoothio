@@ -6,9 +6,9 @@ import time
 import smbus
 
 class Scheduler:
-    FROZEN_DISPENSE_TIME = 5
-    LIQUID_DISPENSE_TIME = 5
-    CAROUSEL_SPIN_TIME = 2
+    FROZEN_DISPENSE_TIME = 4
+    LIQUID_DISPENSE_TIME = 6
+    CAROUSEL_SPIN_TIME = 1
 
     def __init__(self):
         self.blender = mods.Blender()
