@@ -6,8 +6,9 @@ import time
 import smbus
 
 class Scheduler:
-    FROZEN_DISPENSE_TIME = 1
-    LIQUID_DISPENSE_TIME = 1
+    FROZEN_DISPENSE_TIME = 5
+    LIQUID_DISPENSE_TIME = 5
+    CAROUSEL_SPIN_TIME = 2
 
     def __init__(self):
         self.blender = mods.Blender()
@@ -20,6 +21,7 @@ class Scheduler:
 
         self.frozen_time = time.time()
         self.liquid_time = time.time()
+        self.spin_time = time.time()
 
     def enqueue_smoothie(self): 
         self.cup_posns.append(0)
@@ -88,7 +90,11 @@ class Scheduler:
                     all_stations_go = False
 
         # Rotate carousel one spot, adjust states
+        self.spin_time = time.time() + self.CAROUSEL_SPIN_TIME
         self.carousel.send_command(self.bus, 1, 1)
+        while time.time() < self.spin_time:
+            continue
+
         for i, cp in enumerate(self.cup_posns):
             if cp >= 4:
                 self.cup_posns.pop(i)
