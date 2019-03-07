@@ -2,7 +2,6 @@
 # Main functionality #
 ######################
 
-import smbus
 import module.scheduler as scdr
 
 def main():

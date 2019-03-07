@@ -3,6 +3,7 @@
 ###########################
 import module.module_def as mods
 import time
+import smbus
 
 class Scheduler:
     FROZEN_DISPENSE_TIME = 5
@@ -88,7 +89,7 @@ class Scheduler:
         # Rotate carousel one spot, adjust states
         self.carousel.send_command(bus, 1, 1)
         for i, cp in enumerate(self.cup_posns):
-            if cp >= 5:
+            if cp >= 4:
                 self.cup_posns.pop(i)
             else:
                 self.cup_posns[i] += 1
