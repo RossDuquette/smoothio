@@ -15,6 +15,7 @@ def print_modules():
     print """
         Module Numbers
         --------------
+        Smoothie: 0
         Blender:  1
         Carousel: 2
         Dispense: 3
@@ -24,6 +25,7 @@ def main():
     blender = mods.Blender()
     carousel = mods.Carousel()
     dispense = mods.Dispense()
+
     while True:
         print_modules()
         # Receives the data from the User
