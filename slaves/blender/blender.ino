@@ -235,7 +235,6 @@ bool elevator_move(uint8_t dir, uint8_t speed) {
         digitalWrite(ELEV_IN_A, LOW);
         digitalWrite(ELEV_IN_B, LOW);
         analogWrite(ELEV_PWM, 0);
-        duty = 0;
         return true;
     } else if (dir == UP) { // CW
         digitalWrite(ELEV_IN_A, HIGH);
@@ -304,9 +303,13 @@ bool pivot_setAngle(uint8_t degrees) {
     // Check if at angle
     if (states.pivot_deg == degrees) {
         pivot_rotate(NEUTRAL, 0);
-        states.pivot = P_IDLE;
-        integral = 0;
-        return true;
+        delay(PIVOT_SS_TIME);
+        update_sensors();
+        if (states.pivot_deg == degrees) { // Double check
+            states.pivot = P_IDLE;
+            integral = 0;
+            return true;
+        }
     }
     // Determine direction
     if (states.pivot_deg > degrees) {
@@ -328,7 +331,7 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (digitalRead(LIMIT_SENSE)) {
+    if (elev_limit() == 0) {
         elevator_move(NEUTRAL, ELEV_SPEED);
         states.elevator = E_IDLE;
         states.e_homed = 1;
@@ -336,10 +339,11 @@ bool home_elev() {
     } else {
         elevator_move(UP, ELEV_SPEED);
     }
+    return true;
 }
 
 bool home_pivot() {
-    if (digitalRead(LIMIT_SENSE_2)) {
+    if (pivot_limit() == 0) {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
@@ -347,6 +351,7 @@ bool home_pivot() {
     } else {
         pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
     }
+    return true;
 }
 
 
@@ -363,6 +368,7 @@ bool update_sensors() {
     states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
+    return true;
 }
 
 bool elev_limit() {
