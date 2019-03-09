@@ -5,7 +5,9 @@
 
 #include <Wire.h>
 #include "config.h"
+#include <Servo.h>
 
+Servo ESC;
 volatile int32_t elev_position = 0; // Count elevator encoder pulses
 volatile int32_t pivot_position = 0; // Count pivot encoder pulses
 
@@ -22,6 +24,10 @@ void setup() {
 
     // pin setup
     pin_setup();
+
+    // Elevator ESC setup
+    ESC.attach(ELEV_PWM,1000,2000); // (pin, min pulse width, max pulse width in milliseconds)
+    elevator_move(NEUTRAL,0);
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
@@ -76,7 +82,7 @@ void loop() {
     // Elevator state machine
     switch (states.elevator) {
         case E_IDLE:
-            elevator_move(NEUTRAL, ELEV_SPEED);
+            elevator_move(NEUTRAL, 0);
             break;
         case E_ASCEND:
             elevator_move(UP, ELEV_SPEED);
@@ -214,8 +220,8 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
     if (on == 0) {
         digitalWrite(blender_pin, 0);
         duty[blend_id] = 0;
-        return true;
     } else {
+#ifdef BLENDER_SOFTSTART
         if (duty[blend_id] < MAX_DUTY) { // Soft start
             digitalWrite(blender_pin, 1);
             delayMicroseconds(duty[blend_id]);
@@ -225,29 +231,26 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
         } else {
             digitalWrite(blender_pin, 1);
         }
+#else
+        digitalWrite(blender_pin, 1);
+#endif
     }
     return true;
 }
 
-bool elevator_move(uint8_t dir, uint8_t speed) {
-    // Write to pins
-    if (dir == NEUTRAL || speed == 0) {
-        digitalWrite(ELEV_IN_A, LOW);
-        digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, 0);
-        duty = 0;
-        return true;
-    } else if (dir == UP) { // CW
-        digitalWrite(ELEV_IN_A, HIGH);
-        digitalWrite(ELEV_IN_B, LOW);
-    } else if (dir == DOWN) { // CCW
-        digitalWrite(ELEV_IN_A, LOW);
-        digitalWrite(ELEV_IN_B, HIGH);
-    } else {
-        return false;
+bool elevator_move(uint8_t dir, uint16_t speed) {
+    switch(dir) {
+        case UP:
+            ESC.writeMicroseconds(ELEV_OFF+speed);
+            break;
+        case DOWN:
+            ESC.writeMicroseconds(ELEV_OFF-speed);
+            break;
+        case NEUTRAL:
+        default:
+            ESC.writeMicroseconds(ELEV_OFF);
+            break;
     }
-    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
-    analogWrite(ELEV_PWM, speed);
     return true;
 }
 
@@ -410,4 +413,3 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
-

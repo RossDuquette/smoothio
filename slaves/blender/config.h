@@ -114,10 +114,11 @@ typedef struct state_t {
 #define PIVOT_OFFSET 10 // Reduces the chances of wrap-around
 
 // Elevator parameters
+#define ELEV_OFF 1531
 #define ELEV_GAIN 1
 #define ELEV_STICTION 0
 #define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
 #define ELEV_PULSE_RATIO 1 // TO DO: mm/pulse
-#define ELEV_SPEED 255
+#define ELEV_SPEED 250
 #define ELEV_MAX_SPEED 255
 #define ELEV_MAX_HEIGHT 200
