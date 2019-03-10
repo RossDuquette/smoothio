@@ -85,17 +85,19 @@ void loop() {
             elevator_move(NEUTRAL, 0);
             break;
         case E_ASCEND:
-            elevator_move(UP, ELEV_SPEED);
+            elevator_move(DOWN, ELEV_SPEED_UP);
             break;
         case E_DESCEND:
-            elevator_move(DOWN, ELEV_SPEED);
+            elevator_move(UP, ELEV_SPEED_DOWN);
             break;
         case E_HOME:
-            if (states.e_homed == 0) {
-                home_elev();
-            } else {
-                elevator_setHeight(ELEV_MAX_HEIGHT);
-            }
+            home_elev();
+            break;
+        case E_MIDPOINT:
+            elevator_setHeight(ELEV_MID_HEIGHT);
+            break;
+        case E_MAXHEIGHT:
+            elevator_setHeight(ELEV_MAX_HEIGHT);
             break;
     }
 
@@ -239,6 +241,7 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 }
 
 bool elevator_move(uint8_t dir, uint16_t speed) {
+    speed = min(ELEV_MAX_SPEED, speed);
     switch(dir) {
         case UP:
             ESC.writeMicroseconds(ELEV_OFF+speed);
@@ -267,12 +270,12 @@ bool elevator_setHeight(uint8_t height) {
     // Determine direction
     uint8_t dir, speed;
     if (height < states.elevator_height) {
-        dir = DOWN;
-    } else { // height > states.elevator_height
         dir = UP;
+    } else { // height > states.elevator_height
+        dir = DOWN;
     }
     // Determine speed, P control
-    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height);
+    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height) + ELEV_STICTION;
     elevator_move(dir, speed);
     return true;
 }
@@ -331,18 +334,22 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (digitalRead(LIMIT_SENSE)) {
-        elevator_move(NEUTRAL, ELEV_SPEED);
-        states.elevator = E_IDLE;
-        states.e_homed = 1;
-        elev_position = 0;
+    if (states.e_homed == 0) {
+        if (digitalRead(LIMIT_SENSE) == 0) {
+            elevator_move(NEUTRAL, 0);
+            states.elevator = E_IDLE;
+            states.e_homed = 1;
+            elev_position = 0;
+        } else {
+            elevator_move(UP, ELEV_SPEED_UP);
+        }
     } else {
-        elevator_move(UP, ELEV_SPEED);
+        elevator_setHeight(0);
     }
 }
 
 bool home_pivot() {
-    if (digitalRead(LIMIT_SENSE_2)) {
+    if (digitalRead(LIMIT_SENSE_2) == 0) {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
