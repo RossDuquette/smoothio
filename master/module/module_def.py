@@ -20,7 +20,9 @@ class Blender:
         0 : "IDLE",
         1 : "ASCEND",
         2 : "DESCEND",
-        3 : "HOME"
+        3 : "HOME",
+        4 : "MIDPOINT",
+        5 : "FULL_COMPRESSION"
     }
     pivot_states = {
         0 : "IDLE",

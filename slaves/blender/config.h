@@ -22,7 +22,9 @@ typedef enum ELEVATOR {  // Elevator state
     E_IDLE = 0,
     E_ASCEND,
     E_DESCEND,
-    E_HOME
+    E_HOME,
+    E_MIDPOINT,
+    E_MAXHEIGHT
 } ELEVATOR;
 
 typedef enum PIVOT {  // Pivot state
@@ -115,13 +117,13 @@ typedef struct state_t {
 #define PIVOT_OFFSET 10 // Reduces the chances of wrap-around
 
 // Elevator parameters
+#define ELEV_OFF 1510
 #define ELEV_GAIN 1
-#define ELEV_STICTION 0
-#define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
-#define ELEV_PULSE_RATIO 1 // TO DO: mm/pulse
-#define ELEV_SPEED 255
-#define ELEV_MAX_SPEED 255
-#define ELEV_MAX_HEIGHT 200
-
-
-
+#define ELEV_STICTION 200
+#define ELEV_PULSES_REV 2
+#define ELEV_PULSE_RATIO 1
+#define ELEV_SPEED_UP 250
+#define ELEV_SPEED_DOWN 250
+#define ELEV_MAX_SPEED 500
+#define ELEV_MID_HEIGHT 50
+#define ELEV_MAX_HEIGHT 100
