@@ -22,7 +22,9 @@ typedef enum ELEVATOR {  // Elevator state
     E_IDLE = 0,
     E_ASCEND,
     E_DESCEND,
-    E_HOME
+    E_HOME,
+    E_MIDPOINT,
+    E_MAXHEIGHT
 } ELEVATOR;
 
 typedef enum PIVOT {  // Pivot state
@@ -105,19 +107,23 @@ typedef struct state_t {
 // Pivot parameters
 #define PIVOT_KP 1
 #define PIVOT_KI 0.01
-#define PIVOT_STICTION 15
+#define PIVOT_SS_TIME 500
+#define PIVOT_STICTION 0
 #define PIVOT_GEAR_RATIO (298*80/35.0) // Gear motor and external gears
 #define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*6) // Pulses/rev
 #define PIVOT_PULSE_RATIO (360.0/(float)PIVOT_PULSES_REV) // Degrees/pulse
-#define PIVOT_SPEED 200
+#define PIVOT_SPEED 35
 #define PIVOT_MAX_SPEED 255
 #define PIVOT_OFFSET 10 // Reduces the chances of wrap-around
 
 // Elevator parameters
+#define ELEV_OFF 1510
 #define ELEV_GAIN 1
-#define ELEV_STICTION 0
-#define ELEV_PULSES_REV 123 // TO DO: Pulses/rev
-#define ELEV_PULSE_RATIO 1 // TO DO: mm/pulse
-#define ELEV_SPEED 255
-#define ELEV_MAX_SPEED 255
-#define ELEV_MAX_HEIGHT 200
+#define ELEV_STICTION 200
+#define ELEV_PULSES_REV 2
+#define ELEV_PULSE_RATIO 1
+#define ELEV_SPEED_UP 200
+#define ELEV_SPEED_DOWN 200
+#define ELEV_MAX_SPEED 500
+#define ELEV_MID_HEIGHT 50
+#define ELEV_MAX_HEIGHT 100

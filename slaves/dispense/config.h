@@ -8,17 +8,10 @@ typedef enum DState {
     DISPENSE 
 } DState;
 
-// Library found at https://github.com/laurb9/StepperDriver
-#include "DRV8825.h"
-#define MOTOR_STEPS 200 // Per revolution
-#define RPM 300
-/**
- * Microstepping mode: 1, 2, 4, 8, 16 or 32
- * Mode 1 is full speed.
- * Mode 32 is 32 microsteps per step.
- * The motor should rotate just as fast (at the set RPM) 
-**/
-#define MICROSTEPS 16
+
+#include "AccelStepper.h"
+#define HALFSTEP 8
+#define STEP_OFFSET 679
 
 // Configurations
 #define NUM_DISPENSE 6
@@ -59,3 +52,9 @@ typedef enum DState {
 #define ADD_A14 A14
 #define ADD_A13 A13
 #define ADD_A12 A12
+
+#define motorPin1  ADD_A12     // IN1 on the ULN2003 driver 1
+#define motorPin2  ADD_A13     // IN2 on the ULN2003 driver 1
+#define motorPin3  ADD_A14     // IN3 on the ULN2003 driver 1
+#define motorPin4  ADD_A15     // IN4 on the ULN2003 driver 1
+

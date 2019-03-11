@@ -5,7 +5,9 @@
 
 #include <Wire.h>
 #include "config.h"
+#include <Servo.h>
 
+Servo ESC;
 volatile int32_t elev_position = 0; // Count elevator encoder pulses
 volatile int32_t pivot_position = 0; // Count pivot encoder pulses
 
@@ -22,6 +24,10 @@ void setup() {
 
     // pin setup
     pin_setup();
+
+    // Elevator ESC setup
+    ESC.attach(ELEV_PWM,1000,2000); // (pin, min pulse width, max pulse width in milliseconds)
+    elevator_move(NEUTRAL,0);
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
@@ -76,20 +82,22 @@ void loop() {
     // Elevator state machine
     switch (states.elevator) {
         case E_IDLE:
-            elevator_move(NEUTRAL, ELEV_SPEED);
+            elevator_move(NEUTRAL, 0);
             break;
         case E_ASCEND:
-            elevator_move(UP, ELEV_SPEED);
+            elevator_move(UP, ELEV_SPEED_UP);
             break;
         case E_DESCEND:
-            elevator_move(DOWN, ELEV_SPEED);
+            elevator_move(DOWN, ELEV_SPEED_DOWN);
             break;
         case E_HOME:
-            if (states.e_homed == 0) {
-                home_elev();
-            } else {
-                elevator_setHeight(ELEV_MAX_HEIGHT);
-            }
+            home_elev();
+            break;
+        case E_MIDPOINT:
+            elevator_setHeight(ELEV_MID_HEIGHT);
+            break;
+        case E_MAXHEIGHT:
+            elevator_setHeight(ELEV_MAX_HEIGHT);
             break;
     }
 
@@ -214,8 +222,8 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
     if (on == 0) {
         digitalWrite(blender_pin, 0);
         duty[blend_id] = 0;
-        return true;
     } else {
+#ifdef BLENDER_SOFTSTART
         if (duty[blend_id] < MAX_DUTY) { // Soft start
             digitalWrite(blender_pin, 1);
             delayMicroseconds(duty[blend_id]);
@@ -225,29 +233,27 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
         } else {
             digitalWrite(blender_pin, 1);
         }
+#else
+        digitalWrite(blender_pin, 1);
+#endif
     }
     return true;
 }
 
-bool elevator_move(uint8_t dir, uint8_t speed) {
-    // Write to pins
-    if (dir == NEUTRAL || speed == 0) {
-        digitalWrite(ELEV_IN_A, LOW);
-        digitalWrite(ELEV_IN_B, LOW);
-        analogWrite(ELEV_PWM, 0);
-        duty = 0;
-        return true;
-    } else if (dir == UP) { // CW
-        digitalWrite(ELEV_IN_A, HIGH);
-        digitalWrite(ELEV_IN_B, LOW);
-    } else if (dir == DOWN) { // CCW
-        digitalWrite(ELEV_IN_A, LOW);
-        digitalWrite(ELEV_IN_B, HIGH);
-    } else {
-        return false;
+bool elevator_move(uint8_t dir, uint16_t speed) {
+    speed = min(ELEV_MAX_SPEED, speed);
+    switch(dir) {
+        case UP:
+            ESC.writeMicroseconds(ELEV_OFF+speed);
+            break;
+        case DOWN:
+            ESC.writeMicroseconds(ELEV_OFF-speed);
+            break;
+        case NEUTRAL:
+        default:
+            ESC.writeMicroseconds(ELEV_OFF);
+            break;
     }
-    speed = min(ELEV_MAX_SPEED, speed+ELEV_STICTION);
-    analogWrite(ELEV_PWM, speed);
     return true;
 }
 
@@ -264,12 +270,12 @@ bool elevator_setHeight(uint8_t height) {
     // Determine direction
     uint8_t dir, speed;
     if (height < states.elevator_height) {
-        dir = DOWN;
-    } else { // height > states.elevator_height
         dir = UP;
+    } else { // height > states.elevator_height
+        dir = DOWN;
     }
     // Determine speed, P control
-    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height);
+    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height) + ELEV_STICTION;
     elevator_move(dir, speed);
     return true;
 }
@@ -304,15 +310,19 @@ bool pivot_setAngle(uint8_t degrees) {
     // Check if at angle
     if (states.pivot_deg == degrees) {
         pivot_rotate(NEUTRAL, 0);
-        states.pivot = P_IDLE;
-        integral = 0;
-        return true;
+        delay(PIVOT_SS_TIME);
+        update_sensors();
+        if (states.pivot_deg == degrees) { // Double check
+            states.pivot = P_IDLE;
+            integral = 0;
+            return true;
+        }
     }
     // Determine direction
     if (states.pivot_deg > degrees) {
-        dir = CCW;
-    } else { // states.pivot_deg < degrees
         dir = CW;
+    } else { // states.pivot_deg < degrees
+        dir = CCW;
     }
     // Determine speed, PI control
     e = abs((int16_t)degrees-(int16_t)states.pivot_deg);
@@ -328,18 +338,26 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (digitalRead(LIMIT_SENSE)) {
-        elevator_move(NEUTRAL, ELEV_SPEED);
+    if (states.e_homed == 0) {
+        elevator_move(DOWN, ELEV_SPEED_DOWN);
+        delay(100);
+        elevator_move(NEUTRAL, 0);
+        delay(200);
+        while (elev_limit()) {
+            elevator_move(UP, ELEV_SPEED_UP);
+        }
+        elevator_move(NEUTRAL, 0);
         states.elevator = E_IDLE;
         states.e_homed = 1;
         elev_position = 0;
     } else {
-        elevator_move(UP, ELEV_SPEED);
+        elevator_setHeight(0);
     }
+    return true;
 }
 
 bool home_pivot() {
-    if (digitalRead(LIMIT_SENSE_2)) {
+    if (pivot_limit() == 0) {
         pivot_rotate(NEUTRAL, 0);
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
@@ -347,6 +365,7 @@ bool home_pivot() {
     } else {
         pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
     }
+    return true;
 }
 
 
@@ -363,6 +382,7 @@ bool update_sensors() {
     states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
+    return true;
 }
 
 bool elev_limit() {
@@ -410,4 +430,3 @@ void pivot_enc_isr_B() {
         pivot_position++;
     }
 }
-
