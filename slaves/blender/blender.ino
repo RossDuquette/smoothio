@@ -261,17 +261,18 @@ bool elevator_setHeight(uint8_t height) {
     if (states.e_homed == 0) {
         return false;
     }
-    // Check if at height
-    if (height == states.elevator_height) {
-        states.elevator = E_IDLE;
+    // Check if at height, within a pulse
+    if (states.elevator_height <= height &&
+        states.elevator_height+ELEV_PULSE_RATIO >= height) {
         elevator_move(NEUTRAL, 0);
+        states.elevator = E_IDLE;
         return true;
     }
     // Determine direction
     uint8_t dir, speed;
-    if (height < states.elevator_height) {
+    if (states.elevator_height > height) {
         dir = UP;
-    } else { // height > states.elevator_height
+    } else { // states.elevator_height < height
         dir = DOWN;
     }
     // Determine speed, P control
@@ -342,14 +343,34 @@ bool home_elev() {
         elevator_move(DOWN, ELEV_SPEED_DOWN);
         delay(100);
         elevator_move(NEUTRAL, 0);
-        delay(200);
+        delay(100);
+
+        // Debugging
+        if (elev_position < 0) { digitalWrite(ADD_D22, HIGH); }
+        else { digitalWrite(ADD_D22, LOW); }
+        delay(2000);
+        // End debugging
+
+        while (elev_limit()) {
+            elevator_move(UP, ELEV_SPEED_UP);
+        }
+        elevator_move(NEUTRAL, 0);
+
+        // Debugging
+        if (elev_position < 0) { digitalWrite(ADD_D22, HIGH); }
+        else { digitalWrite(ADD_D22, LOW); }
+        delay(2000);
+        // End debugging
+
+        states.elevator = E_IDLE;
+        states.e_homed = 1;
+        elev_position = 0;
+    } else if (states.elevator_height < 20) { // Getting close, look for magnet
         while (elev_limit()) {
             elevator_move(UP, ELEV_SPEED_UP);
         }
         elevator_move(NEUTRAL, 0);
         states.elevator = E_IDLE;
-        states.e_homed = 1;
-        elev_position = 0;
     } else {
         elevator_setHeight(0);
     }
@@ -373,13 +394,10 @@ bool home_pivot() {
 *   Sensor Updates   *
 **********************/
 bool update_sensors() {
-    // Read limit switches
     states.limit1 = (uint8_t)elev_limit();
     states.limit2 = (uint8_t)pivot_limit();
-    // Convert pivot encoder to angle
-    // Map from (0,0) to (PIVOT_PULSES,180)
-    states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO);
-    states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO);
+    states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO); // Convert to degrees
+    states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO); // Convert to mm
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
     return true;
