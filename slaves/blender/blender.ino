@@ -85,10 +85,10 @@ void loop() {
             elevator_move(NEUTRAL, 0);
             break;
         case E_ASCEND:
-            elevator_move(DOWN, ELEV_SPEED_UP);
+            elevator_move(UP, ELEV_SPEED_UP);
             break;
         case E_DESCEND:
-            elevator_move(UP, ELEV_SPEED_DOWN);
+            elevator_move(DOWN, ELEV_SPEED_DOWN);
             break;
         case E_HOME:
             home_elev();
@@ -339,14 +339,17 @@ bool pivot_setAngle(uint8_t degrees) {
 **********************/
 bool home_elev() {
     if (states.e_homed == 0) {
-        if (digitalRead(LIMIT_SENSE) == 0) {
-            elevator_move(NEUTRAL, 0);
-            states.elevator = E_IDLE;
-            states.e_homed = 1;
-            elev_position = 0;
-        } else {
+        elevator_move(DOWN, ELEV_SPEED_DOWN);
+        delay(100);
+        elevator_move(NEUTRAL, 0);
+        delay(200);
+        while (elev_limit()) {
             elevator_move(UP, ELEV_SPEED_UP);
         }
+        elevator_move(NEUTRAL, 0);
+        states.elevator = E_IDLE;
+        states.e_homed = 1;
+        elev_position = 0;
     } else {
         elevator_setHeight(0);
     }
