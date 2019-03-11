@@ -35,11 +35,15 @@ class Scheduler:
 
     def add_cup(self, posn):
         """Add cup to queue and start action"""
+<<<<<<< HEAD
         if not self.check_carousel_idle:
             posn -= 1
         if posn not in self.cup_posns:
             self.cup_posns.append(posn)
 
+=======
+        self.cup_posns[posn] = True
+>>>>>>> Scheduler changes
         self.all_stations_go = False
         if posn == 0:
                 # Send cup dispense command
