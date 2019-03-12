@@ -14,13 +14,13 @@ def main():
     sleep_time = 0.5
     while 1:
         try:
-            blender.send_command(bus,4,2) # Elev descend
+            blender.send_command(bus,4,1) # Elev ascend
             blender.read_data(bus)
             sleep(sleep_time)
             blender.send_command(bus,4,0) # Elev stop
             blender.read_data(bus)
             sleep(sleep_time)
-            blender.send_command(bus,4,1) # Elev ascend
+            blender.send_command(bus,4,2) # Elev descend
             blender.read_data(bus)
             sleep(sleep_time)
             blender.send_command(bus,4,0) # Elev stop
