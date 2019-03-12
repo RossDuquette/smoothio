@@ -35,7 +35,11 @@ class Scheduler:
 
     def add_cup(self, posn):
         """Add cup to queue and start action"""
-        self.cup_posns[posn] = True
+        if not self.check_carousel_idle:
+            posn -= 1
+        if posn not in self.cup_posns:
+            self.cup_posns.append(posn)
+
         self.all_stations_go = False
         if posn == 0:
                 # Send cup dispense command
@@ -76,7 +80,7 @@ class Scheduler:
         """Non-blocking update routine"""
 
         # Check if there is anything to do
-        if self.all_stations_go or not self.carousel_done():
+        if self.all_stations_go or not self.check_carousel_idle():
             return
         # Check cup dispense
         if not self.cup_states[0] and cup_dispense_done():
@@ -111,7 +115,7 @@ class Scheduler:
         self.spin_time = time.time() + self.CAROUSEL_SPIN_TIME
         self.carousel.send_command(self.bus, 1, 1)
 
-    def carousel_done(self):
+    def check_carousel_idle(self):
         """Check if carousel is done spinning"""
         if time.time() < self.spin_time:
             return False
