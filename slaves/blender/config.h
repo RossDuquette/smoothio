@@ -119,10 +119,10 @@ typedef struct state_t {
 // Elevator parameters
 #define ELEV_OFF 1510
 #define ELEV_GAIN 1
-#define ELEV_STICTION 200
-#define ELEV_PULSE_RATIO 4 // mm/pulse
-#define ELEV_SPEED_UP 200
-#define ELEV_SPEED_DOWN 200
+#define ELEV_STICTION 250
+#define ELEV_PULSE_RATIO 2 // mm/pulse
+#define ELEV_SPEED_UP 270
+#define ELEV_SPEED_DOWN 270
 #define ELEV_MAX_SPEED 500
-#define ELEV_MID_HEIGHT 20
-#define ELEV_MAX_HEIGHT 80
+#define ELEV_MID_HEIGHT 50
+#define ELEV_MAX_HEIGHT 100

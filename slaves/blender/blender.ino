@@ -344,24 +344,10 @@ bool home_elev() {
         delay(100);
         elevator_move(NEUTRAL, 0);
         delay(100);
-
-        // Debugging
-        if (elev_position < 0) { digitalWrite(ADD_D22, HIGH); }
-        else { digitalWrite(ADD_D22, LOW); }
-        delay(2000);
-        // End debugging
-
         while (elev_limit()) {
             elevator_move(UP, ELEV_SPEED_UP);
         }
         elevator_move(NEUTRAL, 0);
-
-        // Debugging
-        if (elev_position < 0) { digitalWrite(ADD_D22, HIGH); }
-        else { digitalWrite(ADD_D22, LOW); }
-        delay(2000);
-        // End debugging
-
         states.elevator = E_IDLE;
         states.e_homed = 1;
         elev_position = 0;
@@ -418,7 +404,7 @@ bool pivot_limit() {
 *      ISRs      *
 ******************/
 void elev_enc_isr_A() {
-    if (digitalRead(ELEV_ENC_B) == HIGH) {
+    if (digitalRead(ELEV_ENC_B) == LOW) {
         elev_position++;
     } else {
         elev_position--;
@@ -426,7 +412,7 @@ void elev_enc_isr_A() {
 }
 
 void elev_enc_isr_B() {
-    if (digitalRead(ELEV_ENC_A) == HIGH) {
+    if (digitalRead(ELEV_ENC_A) == LOW) {
         elev_position--;
     } else {
         elev_position++;
@@ -434,7 +420,7 @@ void elev_enc_isr_B() {
 }
 
 void pivot_enc_isr_A() {
-    if (digitalRead(PIVOT_ENC_B) == HIGH) {
+    if (digitalRead(PIVOT_ENC_B) == LOW) {
         pivot_position++;
     } else {
         pivot_position--;
@@ -442,7 +428,7 @@ void pivot_enc_isr_A() {
 }
 
 void pivot_enc_isr_B() {
-    if (digitalRead(PIVOT_ENC_A) == HIGH) {
+    if (digitalRead(PIVOT_ENC_A) == LOW) {
         pivot_position--;
     } else {
         pivot_position++;
