@@ -11,3 +11,5 @@ function sendOrderRequest() {
         console.log('${status}');
     });
 }
+
+$('.your-checkbox').prop('indeterminate', true)
