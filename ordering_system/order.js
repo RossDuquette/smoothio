@@ -19,8 +19,12 @@ function stripFormData() {
 }
 
 function validateFormData(data) {
-    // TODO: Ensure that a request contains valid parameters (ex. minimum selection criteria)
-    return true;
+    // Need to have at least one solid food and one liquid food selected.
+    if ((data.solidDispenseOptions[0] || data.solidDispenseOptions[1] || data.solidDispenseOptions[2])
+        && (data.liquidDispenseOptions[0] || data.liquidDispenseOptions[1] || data.liquidDispenseOptions[2])) {
+        return true;
+    }
+    return false;
 }
 
 function sendOrderRequest() {
@@ -30,7 +34,6 @@ function sendOrderRequest() {
         return;
     }
 
-    alert("Attempting Request");
     $.post(url, formData, function (data, status) {
         console.log('${status}');
     });
