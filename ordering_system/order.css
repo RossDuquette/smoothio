@@ -1,3 +1,17 @@
+/* Smoothio CSS */
+.smoothio-order-form {
+    text-align: left;
+}
+.smoothio-form-option {
+    padding: 10px;
+}
+.smoothio-form-submit {
+    text-align: center;
+}
+
+
+
+/* Template CSS */
 .container {
   max-width: 960px;
 }
@@ -54,7 +68,6 @@
   left: 5%;
   background-color: #e5e5e5;
 }
-
 
 /*
  * Extra utilities
