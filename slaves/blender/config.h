@@ -81,8 +81,10 @@ typedef struct state_t {
 #define BLEND_EN_0 41
 #define BLEND_EN_1 40
 
-#define LIMIT_SENSE 39
-#define LIMIT_SENSE_2 A2
+#define ELEV_LIMIT_TOP A1
+#define ELEV_LIMIT_BOTTOM A0
+#define ELEV_HALL_SENSOR 39
+#define PIVOT_HALL_SENSOR A2
 
 #define CURR_SENSE1 A7
 #define CURR_SENSE0 A6
@@ -114,7 +116,6 @@ typedef struct state_t {
 #define PIVOT_PULSE_RATIO (360.0/(float)PIVOT_PULSES_REV) // Degrees/pulse
 #define PIVOT_SPEED 35
 #define PIVOT_MAX_SPEED 255
-#define PIVOT_OFFSET 10 // Reduces the chances of wrap-around
 
 // Elevator parameters
 #define ELEV_OFF 1510

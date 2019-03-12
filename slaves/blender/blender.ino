@@ -68,14 +68,10 @@ void loop() {
             pivot_rotate(CCW, PIVOT_SPEED);
             break;
         case P_HOME:
-            if (states.p_homed == 0) {
-                home_pivot();
-            } else {
-                pivot_setAngle(PIVOT_OFFSET);
-            }
+            home_pivot();
             break;
         case P_ROTATE_180:
-            pivot_setAngle(180+PIVOT_OFFSET);
+            pivot_setAngle(180);
             break;
     }
 
@@ -172,8 +168,8 @@ bool pin_setup() {
     pinMode(PIVOT_ENC_B, INPUT);
     pinMode(ELEV_ENC_A, INPUT);
     pinMode(ELEV_ENC_B, INPUT);
-    pinMode(LIMIT_SENSE, INPUT);
-    pinMode(LIMIT_SENSE_2, INPUT);
+    pinMode(ELEV_HALL_SENSOR, INPUT);
+    pinMode(PIVOT_HALL_SENSOR, INPUT);
 
     // Outputs
     pinMode(PIVOT_PWM, OUTPUT);
@@ -242,6 +238,11 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 
 bool elevator_move(uint8_t dir, uint16_t speed) {
     speed = min(ELEV_MAX_SPEED, speed);
+    if (elev_limit_top() == 0 && dir == E_ASCEND ||
+        elev_limit_bottom() == 0 && dir == E_DESCEND) {
+        dir = NEUTRAL;
+        states.elevator = E_IDLE;
+    }
     switch(dir) {
         case UP:
             ESC.writeMicroseconds(ELEV_OFF+speed);
@@ -344,19 +345,20 @@ bool home_elev() {
         delay(100);
         elevator_move(NEUTRAL, 0);
         delay(100);
-        while (elev_limit()) {
-            elevator_move(UP, ELEV_SPEED_UP);
-        }
+        elevator_move(UP, ELEV_SPEED_UP);
+        while (elev_limit_top());
         elevator_move(NEUTRAL, 0);
+        delay(100); // Give time to stop before resetting encoder count
         states.elevator = E_IDLE;
         states.e_homed = 1;
         elev_position = 0;
-    } else if (states.elevator_height < 20) { // Getting close, look for magnet
-        while (elev_limit()) {
-            elevator_move(UP, ELEV_SPEED_UP);
-        }
+    } else if (states.elevator_height < 20) { // Getting close, look for limit
+        elevator_move(UP, ELEV_SPEED_UP);
+        while (elev_limit_top());
         elevator_move(NEUTRAL, 0);
+        delay(100);
         states.elevator = E_IDLE;
+        elev_position = 0;
     } else {
         elevator_setHeight(0);
     }
@@ -364,13 +366,25 @@ bool home_elev() {
 }
 
 bool home_pivot() {
-    if (pivot_limit() == 0) {
-        pivot_rotate(NEUTRAL, 0);
+    if (states.p_homed == 0) {
+        if (pivot_limit()) {
+            pivot_rotate(CW, PIVOT_SPEED);
+            while (pivot_limit());
+            pivot_rotate(NEUTRAL, 0);
+            delay(100); // Give time to stop before resetting encoder count
+        }
         states.pivot = P_IDLE; // Turn off pivot
         states.p_homed = 1; // Set as homed
-        pivot_position = round(PIVOT_OFFSET/PIVOT_PULSE_RATIO); // Reset encoder counter, with offset
+        pivot_position = 0; // Reset encoder counter
+    } else if (states.pivot_deg < 20) { // Getting close, look for limit
+        pivot_rotate(CW, PIVOT_SPEED);
+        while (pivot_limit());
+        pivot_rotate(NEUTRAL, 0);
+        delay(100);
+        states.elevator = E_IDLE;
+        elev_position = 0;
     } else {
-        pivot_rotate(CW, PIVOT_SPEED); // Check homing direction
+        pivot_setAngle(0);
     }
     return true;
 }
@@ -380,7 +394,7 @@ bool home_pivot() {
 *   Sensor Updates   *
 **********************/
 bool update_sensors() {
-    states.limit1 = (uint8_t)elev_limit();
+    states.limit1 = (uint8_t)(elev_limit_top() && elev_limit_bottom());
     states.limit2 = (uint8_t)pivot_limit();
     states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO); // Convert to degrees
     states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO); // Convert to mm
@@ -389,14 +403,19 @@ bool update_sensors() {
     return true;
 }
 
-bool elev_limit() {
+bool elev_limit_top() {
+    // Return reading of elevator top limit switch and hall
+    return digitalRead(ELEV_HALL_SENSOR) && digitalRead(ELEV_LIMIT_TOP);
+}
+
+bool elev_limit_bottom() {
     // Return reading of elevator limit switch
-    return digitalRead(LIMIT_SENSE);
+    return digitalRead(ELEV_LIMIT_BOTTOM);
 }
 
 bool pivot_limit() {
-    // Return reading of pivot limit switch
-    return digitalRead(LIMIT_SENSE_2);
+    // Return reading of pivot limit switch, make it active low
+    return digitalRead(PIVOT_HALL_SENSOR) == HIGH ? 0 : 1;
 }
 
 

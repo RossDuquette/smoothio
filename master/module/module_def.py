@@ -42,7 +42,6 @@ class Blender:
     def __init__(self):
         self.ADD = 0x04
         self.block_size = 13
-        self.pivot_offset = 10
         self.blender0 = 0
         self.blender1 = 0
         self.elevator = 0
@@ -67,7 +66,7 @@ class Blender:
         self.routine = data[4]
         self.p_homed = data[5]
         self.e_homed = data[6]
-        self.pivot_deg = data[7]-self.pivot_offset
+        self.pivot_deg = data[7]
         self.elevator_height = data[8]
         self.limit1 = data[9]
         self.limit2 = data[10]
