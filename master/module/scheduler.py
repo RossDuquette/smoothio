@@ -11,6 +11,7 @@ class Scheduler:
     CAROUSEL_SPIN_TIME = 1
 
     def __init__(self):
+        self.clock = 0
         self.blender = mods.Blender()
         self.carousel = mods.Carousel()
         self.dispense = mods.Dispense()
@@ -53,20 +54,20 @@ class Scheduler:
         self.all_stations_go = False
         if posn == 0:
                 # Send cup dispense command
-                self.dispense.send_command(self.bus, 7, 1)
+                # self.dispense.send_command(self.bus, 7, 1)
                 self.cup_states[0] = True
         elif posn == 1:
             # Send frozen dispense commands
-            self.dispense.send_command(self.bus, 1, 1)
-            self.dispense.send_command(self.bus, 2, 1)
-            self.dispense.send_command(self.bus, 3, 1)
+            # self.dispense.send_command(self.bus, 1, 1)
+            # self.dispense.send_command(self.bus, 2, 1)
+            # self.dispense.send_command(self.bus, 3, 1)
             self.frozen_time = time.time() + self.FROZEN_DISPENSE_TIME
             self.cup_states[1] = False
         elif posn == 2:
             # Send liquid dispense commands
-            self.dispense.send_command(self.bus, 4, 1)
-            self.dispense.send_command(self.bus, 5, 1)
-            self.dispense.send_command(self.bus, 6, 1)
+            # self.dispense.send_command(self.bus, 4, 1)
+            # self.dispense.send_command(self.bus, 5, 1)
+            # self.dispense.send_command(self.bus, 6, 1)
             self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME
             self.cup_states[2] = False
         elif posn == 3:
@@ -83,7 +84,7 @@ class Scheduler:
                 self.cup_posns.pop(i)
             else:
                 self.cup_posns[i] += 1
-        for posn in self.posns:
+        for posn in self.cup_posns:
             self.add_cup(posn)
 
     def update(self):
@@ -97,15 +98,15 @@ class Scheduler:
             self.cup_states[0] = True
         # Check frozen dispense
         if not self.cup_states[1] and time.time() >= self.frozen_time:
-            self.dispense.send_command(self.bus, 1, 0)
-            self.dispense.send_command(self.bus, 2, 0)
-            self.dispense.send_command(self.bus, 3, 0) 
+            # self.dispense.send_command(self.bus, 1, 0)
+            # self.dispense.send_command(self.bus, 2, 0)
+            # self.dispense.send_command(self.bus, 3, 0) 
             self.cup_states[1] = True
         # Check liquid dispense
         if not self.cup_states[2] and time.time() >= self.liquid_time:
-            self.dispense.send_command(self.bus, 4, 0)
-            self.dispense.send_command(self.bus, 5, 0)
-            self.dispense.send_command(self.bus, 6, 0) 
+            # self.dispense.send_command(self.bus, 4, 0)
+            # self.dispense.send_command(self.bus, 5, 0)
+            # self.dispense.send_command(self.bus, 6, 0) 
             self.cup_states[2] = True
         # Check blender
         if not self.cup_states[3] and blender_done():
@@ -122,8 +123,9 @@ class Scheduler:
             
     def start_carousel_spin(self):
         """Spin carousel one spot"""
+        print "Spinning Carousel"
         self.spin_time = time.time() + self.CAROUSEL_SPIN_TIME
-        self.carousel.send_command(self.bus, 1, 1)
+        # self.carousel.send_command(self.bus, 1, 1)
 
     def check_carousel_idle(self):
         """Check if carousel is done spinning"""
