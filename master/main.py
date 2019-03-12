@@ -17,7 +17,6 @@ def main():
     scheduler.add_cup(0)
     carousel_spinning = False
 
-
     # Run scheduler until the smoothie has been made
     while not scheduler.empty():
         scheduler.update()
@@ -28,7 +27,6 @@ def main():
         if scheduler.check_all_stations_go():
             scheduler.start_carousel_spin()
             carousel_spinning = True
-
 
 if __name__ == "__main__":
     main()
