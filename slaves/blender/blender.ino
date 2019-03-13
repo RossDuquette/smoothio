@@ -238,8 +238,8 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 
 bool elevator_move(uint8_t dir, uint16_t speed) {
     speed = min(ELEV_MAX_SPEED, speed);
-    if (elev_limit_top() == 0 && dir == E_ASCEND ||
-        elev_limit_bottom() == 0 && dir == E_DESCEND) {
+    if ((elev_limit_top() == 0 && dir == E_ASCEND) ||
+        (elev_limit_bottom() == 0 && dir == E_DESCEND)) {
         dir = NEUTRAL;
         states.elevator = E_IDLE;
     }
@@ -415,7 +415,7 @@ bool elev_limit_bottom() {
 
 bool pivot_limit() {
     // Return reading of pivot limit switch, make it active low
-    return digitalRead(PIVOT_HALL_SENSOR) == HIGH ? 0 : 1;
+    return (digitalRead(PIVOT_HALL_SENSOR) == HIGH) ? 0 : 1;
 }
 
 
