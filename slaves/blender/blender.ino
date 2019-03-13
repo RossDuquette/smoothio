@@ -97,15 +97,13 @@ void loop() {
             break;
     }
 
-    // Routine state machine
-    switch (states.routine) {
-        case R_IDLE:
+    // Cleaning state machine
+    switch (states.clean) {
+        case C_IDLE:
+            digitalWrite(CLEAN_EN, LOW);
             break;
-        case R_BLEND_AND_CLEAN:
-            break;
-        case R_CLEAN:
-            break;
-        case R_BLEND:
+        case C_ON:
+            digitalWrite(CLEAN_EN, HIGH);
             break;
     }
 
@@ -141,8 +139,8 @@ void receiveData(int byteCount) {
                 case ELEV:
                     states.elevator = data;
                     break;
-                case ROUT:
-                    states.routine = data;
+                case CLEAN:
+                    states.clean = data;
                     break;
                 case RESET:
                 default:

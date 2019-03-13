@@ -9,7 +9,7 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     BLEND1,
     PIV,
     ELEV,
-    ROUT,
+    CLEAN,
     RESET = 255
 } COMM_SELECTOR;
 
@@ -35,12 +35,10 @@ typedef enum PIVOT {  // Pivot state
     P_ROTATE_180
 } PIVOT;
 
-typedef enum ROUTINE {  // Complex commands
-    R_IDLE = 0,
-    R_BLEND_AND_CLEAN,
-    R_CLEAN,
-    R_BLEND
-} ROUTINE;
+typedef enum CLEANING {  // Cleaning pump commands
+    C_IDLE = 0,
+    C_ON
+} CLEANING;
 
 // State variables, for communication
 typedef struct state_t {
@@ -49,7 +47,7 @@ typedef struct state_t {
     uint8_t blender1;
     uint8_t elevator;
     uint8_t pivot;
-    uint8_t routine;
+    uint8_t clean;
 
     // Inputs
     uint8_t p_homed;
@@ -82,6 +80,8 @@ typedef struct state_t {
 
 #define BLEND_EN_0 41
 #define BLEND_EN_1 40
+
+#define CLEAN_EN 36
 
 #define ELEV_LIMIT_TOP A1
 #define ELEV_LIMIT_BOTTOM A0

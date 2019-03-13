@@ -9,7 +9,7 @@ class Blender:
         2 : "Blender 1",
         3 : "Pivot",
         4 : "Elevator",
-        5 : "Routine",
+        5 : "Cleaning",
         255 : "Reset"
     }
     blender_states = {
@@ -31,11 +31,9 @@ class Blender:
         3 : "HOME",
         4 : "ROTATE_180"
     }
-    routine_states = {
+    clean_states = {
         0 : "IDLE",
-        1 : "BLEND AND CLEAN",
-        2 : "CLEAN",
-        3 : "BLEND"
+        1 : "CLEAN"
     }
 
     # Init variables
@@ -46,7 +44,7 @@ class Blender:
         self.blender1 = 0
         self.elevator = 0
         self.pivot = 0
-        self.routine = 0
+        self.clean = 0
         self.p_homed = 0
         self.e_homed = 0
         self.pivot_deg = 0
@@ -65,7 +63,7 @@ class Blender:
         self.blender1 = data[1]
         self.elevator = data[2]
         self.pivot = data[3]
-        self.routine = data[4]
+        self.clean = data[4]
         self.p_homed = data[5]
         self.e_homed = data[6]
         self.pivot_deg = data[7]
@@ -80,7 +78,7 @@ class Blender:
         print "Blender 1: {}".format(self.blender_states[self.blender1])
         print "Elevator: {}".format(self.elevator_states[self.elevator])
         print "Pivot: {}".format(self.pivot_states[self.pivot])
-        print "Routine: {}".format(self.routine_states[self.routine])
+        print "Cleaning: {}".format(self.clean_states[self.clean])
         print "Pivot Homed: {}".format(self.p_homed)
         print "Elevator Homed: {}".format(self.e_homed)
         print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
