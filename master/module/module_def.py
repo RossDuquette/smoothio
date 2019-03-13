@@ -41,7 +41,7 @@ class Blender:
     # Init variables
     def __init__(self):
         self.ADD = 0x04
-        self.block_size = 13
+        self.block_size = 15
         self.blender0 = 0
         self.blender1 = 0
         self.elevator = 0
@@ -51,7 +51,9 @@ class Blender:
         self.e_homed = 0
         self.pivot_deg = 0
         self.elevator_height = 0
-        self.limit1 = 0
+        self.elev_hall = 0
+        self.elev_limit_top = 0
+        self.elev_limit_bot = 0
         self.limit2 = 0
         self.curr_sense0 = 0
         self.curr_sense1 = 0
@@ -68,10 +70,12 @@ class Blender:
         self.e_homed = data[6]
         self.pivot_deg = data[7]
         self.elevator_height = data[8]
-        self.limit1 = data[9]
-        self.limit2 = data[10]
-        self.curr_sense0 = data[11]
-        self.curr_sense1 = data[12]
+        self.elev_hall = data[9]
+        self.elev_limit_top = data[10]
+        self.elev_limit_bot = data[11]
+        self.limit2 = data[12]
+        self.curr_sense0 = data[13]
+        self.curr_sense1 = data[14]
         print "Blender 0: {}".format(self.blender_states[self.blender0])
         print "Blender 1: {}".format(self.blender_states[self.blender1])
         print "Elevator: {}".format(self.elevator_states[self.elevator])
@@ -81,7 +85,9 @@ class Blender:
         print "Elevator Homed: {}".format(self.e_homed)
         print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
         print "Elevator Height: {}cm".format(self.elevator_height)
-        print "Elevator Limit: {}".format(self.limit1)
+        print "Elevator Hall: {}".format(self.elev_hall)
+        print "Elevator Top Limit: {}".format(self.elev_limit_top)
+        print "Elevator Bottom Limit: {}".format(self.elev_limit_bot)
         print "Pivot Limit: {}".format(self.limit2)
         print "Current Sense 0: {}".format(self.curr_sense0)
         print "Current Sense 1: {}\n".format(self.curr_sense1)

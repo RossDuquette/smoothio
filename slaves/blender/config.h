@@ -56,7 +56,9 @@ typedef struct state_t {
     uint8_t e_homed;
     uint8_t pivot_deg;
     uint8_t elevator_height;  // in mm, measured from top
-    uint8_t limit1;
+    uint8_t elev_hall;
+    uint8_t elev_limit_top;
+    uint8_t elev_limit_bot;
     uint8_t limit2;
     uint8_t curr_sense0;
     uint8_t curr_sense1;

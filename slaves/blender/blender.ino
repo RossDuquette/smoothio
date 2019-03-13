@@ -394,7 +394,9 @@ bool home_pivot() {
 *   Sensor Updates   *
 **********************/
 bool update_sensors() {
-    states.limit1 = (uint8_t)(elev_limit_top() && elev_limit_bottom());
+    states.elev_hall = (uint8_t)digitalRead(ELEV_HALL_SENSOR);
+    states.elev_limit_top = (uint8_t)digitalRead(ELEV_LIMIT_TOP);
+    states.elev_limit_bot = (uint8_t)digitalRead(ELEV_LIMIT_BOTTOM);
     states.limit2 = (uint8_t)pivot_limit();
     states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO); // Convert to degrees
     states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO); // Convert to mm
