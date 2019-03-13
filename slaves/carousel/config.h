@@ -8,14 +8,21 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     CCW,
     HOME,
     DISABLE, // Disables the stepper motor, re-enabled on next motion
+    CLEAN,
     IDLE = 255
 } COMM_SELECTOR;
+
+typedef enum CLEANING {  // Cleaning pump commands
+    C_IDLE = 0,
+    C_ON
+} CLEANING;
 
 // State variables, for communication
 typedef struct state_t {
     // Outputs
     uint8_t c_state;
     uint8_t num_cups;
+    uint8_t clean;
 
     // Inputs
     uint8_t cup_sense0;
@@ -45,7 +52,7 @@ typedef struct state_t {
 // Misc
 #define CUP_WAIT_TIME 1000
 #define SENS_UPDATE_TIME 100
-#define GEAR_RATIO 6.7
+#define GEAR_RATIO (94/16.0)
 #define DEG_PER_SLOT (360/5*GEAR_RATIO)
 
 // Pin Layout
@@ -72,3 +79,5 @@ typedef struct state_t {
 #define CAROUSEL_POS A2
 #define CUP_SENSE1 A1
 #define CUP_SENSE0 A0
+
+#define CLEAN_EN 36

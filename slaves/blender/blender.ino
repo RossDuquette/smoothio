@@ -18,16 +18,16 @@ state_t states; // Store all system states
 *   Main Functions  *
 *********************/
 void setup() {
-    // initialize i2c as slave
-    Serial.begin(9600);
-    Wire.begin(SLAVE_ADDRESS);
-
     // pin setup
     pin_setup();
 
     // Elevator ESC setup
     ESC.attach(ELEV_PWM,1000,2000); // (pin, min pulse width, max pulse width in milliseconds)
     elevator_move(NEUTRAL,0);
+
+    // initialize i2c as slave
+    Serial.begin(9600);
+    Wire.begin(SLAVE_ADDRESS);
 
     // define callbacks for i2c communication
     Wire.onReceive(receiveData);
@@ -97,16 +97,6 @@ void loop() {
             break;
     }
 
-    // Cleaning state machine
-    switch (states.clean) {
-        case C_IDLE:
-            digitalWrite(CLEAN_EN, LOW);
-            break;
-        case C_ON:
-            digitalWrite(CLEAN_EN, HIGH);
-            break;
-    }
-
     // Update sensor readings
     update_sensors();
 }
@@ -138,9 +128,6 @@ void receiveData(int byteCount) {
                     break;
                 case ELEV:
                     states.elevator = data;
-                    break;
-                case CLEAN:
-                    states.clean = data;
                     break;
                 case RESET:
                 default:
@@ -243,10 +230,10 @@ bool elevator_move(uint8_t dir, uint16_t speed) {
     }
     switch(dir) {
         case UP:
-            ESC.writeMicroseconds(ELEV_OFF+speed);
+            ESC.writeMicroseconds(ELEV_OFF-speed);
             break;
         case DOWN:
-            ESC.writeMicroseconds(ELEV_OFF-speed);
+            ESC.writeMicroseconds(ELEV_OFF+speed);
             break;
         case NEUTRAL:
         default:

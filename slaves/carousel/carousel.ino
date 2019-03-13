@@ -37,6 +37,7 @@ bool pin_setup() {
     pinMode(CAROUSEL_POS, INPUT);
     pinMode(CUP_SENSE0, INPUT);
     pinMode(CUP_SENSE1, INPUT);
+    pinMode(CLEAN_EN, OUTPUT);
 }
 
 bool state_setup() {
@@ -46,6 +47,7 @@ bool state_setup() {
 }
 
 void loop() {
+    // Carousel state machine
     switch (states.c_state) {
         case CW:
         case CCW:
@@ -60,6 +62,15 @@ void loop() {
             break;
         case IDLE:
         default:
+            break;
+    }
+    // Cleaning state machine
+    switch (states.clean) {
+        case C_IDLE:
+            digitalWrite(CLEAN_EN, LOW);
+            break;
+        case C_ON:
+            digitalWrite(CLEAN_EN, HIGH);
             break;
     }
     if (millis() > next_sens_update) {
@@ -84,6 +95,8 @@ void receiveData(int byteCount) {
             uint8_t data = Wire.read();
             if (selector == 255) {
                 state_setup();
+            } else if (selector == CLEAN) {
+                states.clean = data;
             } else {
                 states.c_state = selector;
                 states.num_cups = data;
