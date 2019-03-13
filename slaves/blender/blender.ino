@@ -223,8 +223,8 @@ bool blender_control(uint8_t blender_pin, uint8_t on) {
 
 bool elevator_move(uint8_t dir, uint16_t speed) {
     speed = min(ELEV_MAX_SPEED, speed);
-    if ((elev_limit_top() == 0 && dir == E_ASCEND) ||
-        (elev_limit_bottom() == 0 && dir == E_DESCEND)) {
+    if ((elev_limit_top() == 0 && dir == UP) ||
+        (elev_limit_bottom() == 0 && dir == DOWN)) {
         dir = NEUTRAL;
         states.elevator = E_IDLE;
     }
@@ -330,6 +330,8 @@ bool home_elev() {
         delay(100);
         elevator_move(NEUTRAL, 0);
         delay(100);
+        elevator_move(UP, ELEV_BOOST_UP);
+        delay(100);
         elevator_move(UP, ELEV_SPEED_UP);
         while (elev_limit_top());
         elevator_move(NEUTRAL, 0);
@@ -392,7 +394,7 @@ bool update_sensors() {
 
 bool elev_limit_top() {
     // Return reading of elevator top limit switch and hall
-    return digitalRead(ELEV_HALL_SENSOR) && digitalRead(ELEV_LIMIT_TOP);
+    return digitalRead(ELEV_LIMIT_TOP);
 }
 
 bool elev_limit_bottom() {
