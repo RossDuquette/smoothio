@@ -43,7 +43,7 @@ def main():
             carousel_spinning = True
 
 if __name__ == "__main__":
-    thread.start_new_thread(flask_server,())
-    print("Waiting For Flask Server")
-    time.sleep(2)
+    # thread.start_new_thread(flask_server,())
+    # print("Waiting For Flask Server")
+    # time.sleep(2)
     main()
