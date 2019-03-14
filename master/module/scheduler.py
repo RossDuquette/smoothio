@@ -6,11 +6,12 @@ import time
 import smbus
 
 class Scheduler:
-    FROZEN_DISPENSE_TIME = 3
-    LIQUID_DISPENSE_TIME = 3
-    CAROUSEL_SPIN_TIME = 3
-    BLEND_TIME = 4
+    FROZEN_DISPENSE_TIME = 7
+    LIQUID_DISPENSE_TIME = 4
+    CAROUSEL_SPIN_TIME = 1
+    BLEND_TIME = 5
     CUP_DISPENSE_TIME = 2
+    BLENDER_RECOIL_TIME = 1
 
     def __init__(self):
         self.clock = 0
@@ -28,6 +29,7 @@ class Scheduler:
         self.liquid_time = time.time()
         self.spin_time = time.time()
         self.blend_time = time.time()
+        self.blend_recoil_time = time.time()
         self.blend_cycles = 0
 
     def empty(self):
@@ -41,8 +43,6 @@ class Scheduler:
 
     def add_cup(self, posn):
         """Add cup to queue and start action"""
-        if not self.check_carousel_idle():
-            posn -= 1
         if posn not in self.cup_posns:
             self.cup_posns.append(posn)
 
@@ -51,27 +51,26 @@ class Scheduler:
             # Send cup dispense command
             # self.dispense.send_command(self.bus, 7, 1)
             self.cup_time = time.time() + self.CUP_DISPENSE_TIME
-            self.cup_states[0] = False
+            self.cup_states[0] = True
         elif posn == 1:
             # Send frozen dispense commands
-            # self.dispense.send_command(self.bus, 1, 1)
-            # self.dispense.send_command(self.bus, 2, 1)
-            # self.dispense.send_command(self.bus, 3, 1)
+            self.dispense.send_command(self.bus, 1, 1)
+            self.dispense.send_command(self.bus, 2, 1)
+            self.dispense.send_command(self.bus, 3, 1)
             self.frozen_time = time.time() + self.FROZEN_DISPENSE_TIME
-            self.cup_states[1] = False
+            self.cup_states[1] = True
         elif posn == 2:
             # Send liquid dispense commands
-            # self.dispense.send_command(self.bus, 4, 1)
-            # self.dispense.send_command(self.bus, 5, 1)
-            # self.dispense.send_command(self.bus, 6, 1)
+            self.dispense.send_command(self.bus, 4, 1)
+            self.dispense.send_command(self.bus, 5, 1)
+            self.dispense.send_command(self.bus, 6, 1)
             self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME
-            self.cup_states[2] = False
+            self.cup_states[2] = True
         elif posn == 3:
             # Send blender commands
-            self.cup_states[3] = True
-            self.blend_cycles = 2
+            self.cup_states[3] = False
             self.blend_time = time.time() + self.BLEND_TIME
-            # self.blender.send_command(self.bus, 4, 2)
+            self.blender.send_command(self.bus, 4, 2)
         elif posn == 4:
             # Wait for cup to be taken 
             self.cup_states[4] = True
@@ -94,30 +93,35 @@ class Scheduler:
             return
         # Check cup dispense
         if not self.cup_states[0] and time.time() >= self.cup_time:
-            # self.dispense.send_command(self.bus, 7, 0) 
+            self.dispense.send_command(self.bus, 7, 0) 
             self.cup_states[0] = True
         # Check frozen dispense
         if not self.cup_states[1] and time.time() >= self.frozen_time:
-            # self.dispense.send_command(self.bus, 1, 0)
-            # self.dispense.send_command(self.bus, 2, 0)
-            # self.dispense.send_command(self.bus, 3, 0) 
+            self.dispense.send_command(self.bus, 1, 0)
+            self.dispense.send_command(self.bus, 2, 0)
+            self.dispense.send_command(self.bus, 3, 0) 
             self.cup_states[1] = True
         # Check liquid dispense
         if not self.cup_states[2] and time.time() >= self.liquid_time:
-            # self.dispense.send_command(self.bus, 4, 0)
-            # self.dispense.send_command(self.bus, 5, 0)
-            # self.dispense.send_command(self.bus, 6, 0) 
+            self.dispense.send_command(self.bus, 4, 0)
+            self.dispense.send_command(self.bus, 5, 0)
+            self.dispense.send_command(self.bus, 6, 0) 
             self.cup_states[2] = True
         # Check blender
         if not self.cup_states[3]:
             if time.time() >= self.blend_time:
-                self.blend_cycles -= 1
-                if self.blend_cycles != 0:
-                    self.blend_time = time.time() + self.BLEND_TIME
-                    # self.blender.send_command(self.bus, 4, 2)
-                else:
-                    self.cup_states[3] = True
-                    # self.blender.send_command(self.bus, 4, 3)
+                print "Done Blending"
+                self.cup_states[3] = True
+                self.blender.send_command(self.bus, 4, 3)
+                time.sleep(0.5)
+            elif time.time() < self.blend_recoil_time:
+                print "Recoiling Blender"
+                pass
+            elif self.elevator_idle:
+                print "Descending Elev"
+                self.blender.send_command(self.bus, 4, 2)
+                self.blend_recoil_time = time.time() + self.BLENDER_RECOIL_TIME
+                    
         # Check if cup has been taken
         if not self.cup_states[4] and self.cup_serve_done():
             self.cup_states[4] = True
@@ -132,7 +136,7 @@ class Scheduler:
         """Spin carousel one spot"""
         print("Spinning Carousel")
         self.spin_time = time.time() + self.CAROUSEL_SPIN_TIME
-        # self.carousel.send_command(self.bus, 1, 1)
+        self.carousel.send_command(self.bus, 1, 1)
 
     def check_carousel_idle(self):
         """Check if carousel is done spinning"""
@@ -140,10 +144,10 @@ class Scheduler:
             return True
         return False
 
-    def blender_done(self):
+    def elevator_idle(self):
         """Check if the blender is done"""
-        self.blender.read_data()
-        if self.blender.routine == 0:
+        self.blender.read_data(print_data=False)
+        if self.blender.elevator == 0:
             return True
         return False
 
