@@ -144,7 +144,7 @@ class Carousel:
         3 : "HOME",
         4 : "DISABLE STEPPER",
         5 : "CLEAN",
-        255 : "RESET"
+        255 : "IDLE"
     }
     clean_states = {
         0 : "IDLE",
@@ -155,7 +155,7 @@ class Carousel:
     def __init__(self):
         self.ADD = 0x05
         self.num_slots = 5
-        self.block_size = 8
+        self.block_size = 9
         self.c_state = 0
         self.num_cups = 0
         self.clean = 0
@@ -177,6 +177,7 @@ class Carousel:
         self.cup_mass0 = data[5]
         self.cup_mass1 = data[6]
         self.carousel_pos = data[7]
+        self.homed = data[8]
         print "Carousel State: {}".format(self.carousel_selectors[self.c_state])
         print "Slots to Rotate: {}".format(self.num_cups)
         print "Cleaning: {}".format(self.clean_states[self.clean])
