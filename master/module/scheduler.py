@@ -16,11 +16,11 @@ class BlenderStates:
 
 class Scheduler:
     FROZEN_DISPENSE_TIME = 7
-    LIQUID_DISPENSE_TIME = 4
-    CAROUSEL_SPIN_TIME = 1
-    BLEND_TIME = 10
+    LIQUID_DISPENSE_TIME = 7
+    CAROUSEL_SPIN_TIME = 2
+    BLEND_TIME = 20
     CUP_DISPENSE_TIME = 2
-    BLENDER_RECOIL_TIME = 2
+    BLENDER_RECOIL_TIME = 0.5
     BLENDER_START_TIME = 1
     BLENDER_DESCEND_TIME = 1
 
@@ -42,7 +42,7 @@ class Scheduler:
         self.blend_time = time.time()
         self.blend_recoil_time = time.time()
         self.blend_cycles = 0
-        self.blend_state = BlenderStates.IDLE
+        self.blender_state = BlenderStates.IDLE
         self.blend_state_timer = time.time()
 
     def home_everything(self):
@@ -73,8 +73,8 @@ class Scheduler:
 
     def add_cup(self, posn):
         """Add cup to queue and start action"""
-        if posn not in self.cup_posns:
-            self.cup_posns.append(posn)
+        # if posn not in self.cup_posns:
+        #     self.cup_posns.append(posn)
 
         self.all_stations_go = False
         if posn == 0:
@@ -102,19 +102,16 @@ class Scheduler:
             self.blend_time = time.time() + self.BLEND_TIME
             self.blender.send_command(self.bus, 4, 4)
             self.blender_state = BlenderStates.SEAL_BLENDER
+            self.carousel.send_command(self.bus, 4, 0)
         elif posn == 4:
             # Wait for cup to be taken 
-            self.cup_states[4] = True
+            self.cup_states[4] = False
 
     def shift_cups(self):
         """Shift all cups by one slot"""
         for i, cp in enumerate(self.cup_posns):
-            if cp >= 4:
-                self.cup_posns.pop(i)
-            else:
-                self.cup_posns[i] += 1
-        for posn in self.cup_posns:
-            self.add_cup(posn)
+            self.cup_posns[i] += 1
+            self.add_cup(self.cup_posns[i])
 
     def update(self):
         """Non-blocking update routine"""
@@ -140,7 +137,7 @@ class Scheduler:
             self.cup_states[2] = True
         # Check blender
         if not self.cup_states[3]:
-            if time.time() >= self.blend_time:
+            if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
                 self.blender.send_command(self.bus, 1, 0)
                 time.sleep(0.5)
                 self.blender.send_command(self.bus, 4, 3)
@@ -169,31 +166,17 @@ class Scheduler:
                     self.blender_state = BlenderStates.DESCENDING_BLENDER
                     self.blender.send_command(self.bus, 4, 2)
                     self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
-            elif self.blend_state == BlenderStates.HOMING_BLENDER:
+            elif self.blender_state == BlenderStates.HOMING_BLENDER:
                 if self.elevator_idle():
                     self.cup_states[3] = True
-                    self.blend_state = BlenderStates.IDLE
-
-
-
-
-                
-                
-            #     print "Done Blending"
-            #     self.cup_states[3] = True
-            #     # self.blender.send_command(self.bus, 4, 3)
-            #     time.sleep(0.5)
-            # elif time.time() < self.blend_recoil_time:
-            #     print "Recoiling Blender"
-            #     pass
-            # elif self.elevator_idle:
-            #     print "Descending Elev"
-            #     # self.blender.send_command(self.bus, 4, 2)
-            #     self.blend_recoil_time = time.time() + self.BLENDER_RECOIL_TIME
+                    self.blender_state = BlenderStates.IDLE
                     
         # Check if cup has been taken
-        if not self.cup_states[4] and self.cup_serve_done():
+        if not self.cup_states[4]: # and self.cup_serve_done():
             self.cup_states[4] = True
+            for i, cp in enumerate(self.cup_posns):
+                if cp == 4:
+                    self.cup_posns.pop(i)
 
         # Check if all states are idle
         self.all_stations_go = True
