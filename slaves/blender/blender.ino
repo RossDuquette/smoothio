@@ -88,6 +88,10 @@ void loop() {
             elevator_move(NEUTRAL, 0);
             break;
         case E_ASCEND:
+            elevator_move(UP, ELEV_BOOST_UP);
+            delay(50);
+            elevator_move(NEUTRAL, 0);
+            delay(50);
             elevator_move(UP, ELEV_SPEED_UP);
             break;
         case E_DESCEND:
@@ -418,7 +422,7 @@ bool pivot_limit() {
 *      ISRs      *
 ******************/
 void elev_enc_isr_A() {
-    if (digitalRead(ELEV_ENC_B) == LOW) {
+    if (digitalRead(ELEV_ENC_B) == HIGH) {
         elev_position++;
     } else {
         elev_position--;
@@ -426,7 +430,7 @@ void elev_enc_isr_A() {
 }
 
 void elev_enc_isr_B() {
-    if (digitalRead(ELEV_ENC_A) == LOW) {
+    if (digitalRead(ELEV_ENC_A) == HIGH) {
         elev_position--;
     } else {
         elev_position++;
