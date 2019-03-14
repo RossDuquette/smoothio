@@ -10,6 +10,7 @@ class Scheduler:
     LIQUID_DISPENSE_TIME = 6
     CAROUSEL_SPIN_TIME = 1
     BLEND_TIME = 4
+    CUP_DISPENSE_TIME = 2
 
     def __init__(self):
         self.clock = 0
@@ -68,6 +69,7 @@ class Scheduler:
             self.cup_states[3] = True
             self.blend_cycles = 4
             self.blend_time = time.time + self.BLEND_TIME
+            self.dispense.send_command(self.bus, 4, 2)
         elif posn == 4:
             # Wait for cup to be taken 
             self.cup_states[4] = True
@@ -106,10 +108,13 @@ class Scheduler:
         # Check blender
         if not self.cup_states[3]:
             if time.time >= self.blend_time:
-                blend_cycles -= 1
-                if blend_cycles <= 0:
-                    
-            self.cup_states[3] = True
+                self.blend_cycles -= 1
+                if self.blend_cycles != 0:
+                    self.blend_time = time.time + self.BLEND_TIME
+                    self.dispense.send_command(self.bus, 4, 2)
+                else:
+                    self.cup_states[3] = True
+                    self.dispense.send_command(self.bus, 4, 0)
         # Check if cup has been taken
         if not self.cup_states[4] and cup_serve_done():
             self.cup_states[4] = True
