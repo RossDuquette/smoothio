@@ -52,7 +52,7 @@ class Blender:
         self.curr_sense1 = 0
 
     # Read data from blend module
-    def read_data(self, i2cbus):
+    def read_data(self, i2cbus, print_data=True):
         data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
         self.blender0 = data[0]
         self.blender1 = data[1]
@@ -68,20 +68,21 @@ class Blender:
         self.limit2 = data[11]
         self.curr_sense0 = data[12]
         self.curr_sense1 = data[13]
-        print "Blender 0: {}".format(self.blender_states[self.blender0])
-        print "Blender 1: {}".format(self.blender_states[self.blender1])
-        print "Elevator: {}".format(self.elevator_states[self.elevator])
-        print "Pivot: {}".format(self.pivot_states[self.pivot])
-        print "Pivot Homed: {}".format(self.p_homed)
-        print "Elevator Homed: {}".format(self.e_homed)
-        print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
-        print "Elevator Height: {}cm".format(self.elevator_height)
-        print "Elevator Hall: {}".format(self.elev_hall)
-        print "Elevator Top Limit: {}".format(self.elev_limit_top)
-        print "Elevator Bottom Limit: {}".format(self.elev_limit_bot)
-        print "Pivot Limit: {}".format(self.limit2)
-        print "Current Sense 0: {}".format(self.curr_sense0)
-        print "Current Sense 1: {}\n".format(self.curr_sense1)
+        if print_data == True:
+            print "Blender 0: {}".format(self.blender_states[self.blender0])
+            print "Blender 1: {}".format(self.blender_states[self.blender1])
+            print "Elevator: {}".format(self.elevator_states[self.elevator])
+            print "Pivot: {}".format(self.pivot_states[self.pivot])
+            print "Pivot Homed: {}".format(self.p_homed)
+            print "Elevator Homed: {}".format(self.e_homed)
+            print "Pivot Angle: {} degrees".format(self.pivot_deg if self.pivot_deg<200 else -256+self.pivot_deg)
+            print "Elevator Height: {}cm".format(self.elevator_height)
+            print "Elevator Hall: {}".format(self.elev_hall)
+            print "Elevator Top Limit: {}".format(self.elev_limit_top)
+            print "Elevator Bottom Limit: {}".format(self.elev_limit_bot)
+            print "Pivot Limit: {}".format(self.limit2)
+            print "Current Sense 0: {}".format(self.curr_sense0)
+            print "Current Sense 1: {}\n".format(self.curr_sense1)
 
 
     # Selectors
@@ -168,7 +169,7 @@ class Carousel:
         self.homed = 0
 
     # Read data from blend module
-    def read_data(self, i2cbus):
+    def read_data(self, i2cbus, print_data=True):
         data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
         self.c_state = data[0]
         self.num_cups = data[1]
@@ -179,15 +180,16 @@ class Carousel:
         self.cup_mass1 = data[6]
         self.carousel_pos = data[7]
         self.homed = data[8]
-        print "Carousel State: {}".format(self.carousel_selectors[self.c_state])
-        print "Slots to Rotate: {}".format(self.num_cups)
-        print "Cleaning: {}".format(self.clean_states[self.clean])
-        print "Cup Sense 0: {}".format(self.cup_sense0)
-        print "Cup Sense 1: {}".format(self.cup_sense1)
-        print "Cup Mass 0: {}".format(self.cup_mass0)
-        print "Cup Mass 1: {}".format(self.cup_mass1)
-        print "Homing Sensor: {}".format(self.carousel_pos)
-        print "Homed: {}\n".format(self.homed)
+        if print_data == True:
+            print "Carousel State: {}".format(self.carousel_selectors[self.c_state])
+            print "Slots to Rotate: {}".format(self.num_cups)
+            print "Cleaning: {}".format(self.clean_states[self.clean])
+            print "Cup Sense 0: {}".format(self.cup_sense0)
+            print "Cup Sense 1: {}".format(self.cup_sense1)
+            print "Cup Mass 0: {}".format(self.cup_mass0)
+            print "Cup Mass 1: {}".format(self.cup_mass1)
+            print "Homing Sensor: {}".format(self.carousel_pos)
+            print "Homed: {}\n".format(self.homed)
 
     # Selectors
     def print_selectors(self):
@@ -253,7 +255,7 @@ class Dispense:
         self.cup = 0
 
     # Read state
-    def read_data(self, i2cbus):
+    def read_data(self, i2cbus, print_data=True):
         data = i2cbus.read_i2c_block_data(self.ADD, 0, self.block_size)
         self.F1 = data[0]
         self.F2 = data[1]
@@ -262,13 +264,14 @@ class Dispense:
         self.L2 = data[4]
         self.L3 = data[5]
         self.cup = data[6]
-        print "Frozen 1: {}".format(self.dispense_actions[self.F1])
-        print "Frozen 2: {}".format(self.dispense_actions[self.F2])
-        print "Frozen 3: {}".format(self.dispense_actions[self.F3])
-        print "Liquid 1: {}".format(self.dispense_actions[self.L1])
-        print "Liquid 2: {}".format(self.dispense_actions[self.L2])
-        print "Liquid 3: {}".format(self.dispense_actions[self.L3])
-        print "Cup Dispense: {}\n".format(self.dispense_actions[self.cup])
+        if print_data:
+            print "Frozen 1: {}".format(self.dispense_actions[self.F1])
+            print "Frozen 2: {}".format(self.dispense_actions[self.F2])
+            print "Frozen 3: {}".format(self.dispense_actions[self.F3])
+            print "Liquid 1: {}".format(self.dispense_actions[self.L1])
+            print "Liquid 2: {}".format(self.dispense_actions[self.L2])
+            print "Liquid 3: {}".format(self.dispense_actions[self.L3])
+            print "Cup Dispense: {}\n".format(self.dispense_actions[self.cup])
 
     # Print selectors
     def print_selectors(self):
