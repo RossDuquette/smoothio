@@ -134,7 +134,8 @@ bool carousel_home() {
     stepper.setRPM(HOMING_RPM);
     stepper.startRotate(720);
     while (digitalRead(CAROUSEL_POS) == 1) {
-        stepper.nextAction();
+        if (stepper.nextAction() == 0)
+            break;
     }
     stepper.stop();
     stepper.setRPM(RPM);

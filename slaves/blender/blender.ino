@@ -326,7 +326,11 @@ bool pivot_setAngle(uint8_t degrees) {
 **********************/
 bool home_elev() {
     if (states.e_homed == 0) {
-        elevator_move(DOWN, ELEV_SPEED_DOWN);
+        //elevator_move(DOWN, ELEV_SPEED_DOWN);
+        //delay(100);
+        //elevator_move(NEUTRAL, 0);
+        //delay(100);
+        elevator_move(UP, ELEV_BOOST_UP);
         delay(100);
         elevator_move(NEUTRAL, 0);
         delay(100);
