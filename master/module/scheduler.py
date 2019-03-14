@@ -8,7 +8,7 @@ import smbus
 class Scheduler:
     FROZEN_DISPENSE_TIME = 4
     LIQUID_DISPENSE_TIME = 6
-    CAROUSEL_SPIN_TIME = 1
+    CAROUSEL_SPIN_TIME = 2
     BLEND_TIME = 4
     CUP_DISPENSE_TIME = 2
 
@@ -50,8 +50,9 @@ class Scheduler:
         if posn == 0:
             # Send cup dispense command
             self.dispense.send_command(self.bus, 7, 1)
-            self.cup_time = time.time + self.CUP_DISPENSE_TIME
+            self.cup_time = time.time() + self.CUP_DISPENSE_TIME
             self.cup_states[0] = False
+            print "Cup Set"
         elif posn == 1:
             # Send frozen dispense commands
             self.dispense.send_command(self.bus, 1, 1)
@@ -70,7 +71,7 @@ class Scheduler:
             # Send blender commands
             self.cup_states[3] = True
             self.blend_cycles = 4
-            self.blend_time = time.time + self.BLEND_TIME
+            self.blend_time = time.time() + self.BLEND_TIME
             # self.dispense.send_command(self.bus, 4, 2)
         elif posn == 4:
             # Wait for cup to be taken 
@@ -93,7 +94,7 @@ class Scheduler:
         if self.all_stations_go or not self.check_carousel_idle():
             return
         # Check cup dispense
-        if not self.cup_states[0] and time.time >= self.cup_time:
+        if not self.cup_states[0] and time.time() >= self.cup_time:
             self.dispense.send_command(self.bus, 7, 0) 
             self.cup_states[0] = True
         # Check frozen dispense
