@@ -5,13 +5,24 @@ import module.module_def as mods
 import time
 import smbus
 
+class BlenderStates:
+    IDLE = 0
+    SEAL_BLENDER = 1
+    STARTING_BLENDER = 2
+    DESCENDING_BLENDER = 3
+    RECOILING_BLENDER = 4
+    STOPPING_BLENDER = 5
+    HOMING_BLENDER = 6
+
 class Scheduler:
     FROZEN_DISPENSE_TIME = 7
     LIQUID_DISPENSE_TIME = 4
     CAROUSEL_SPIN_TIME = 1
-    BLEND_TIME = 5
+    BLEND_TIME = 10
     CUP_DISPENSE_TIME = 2
-    BLENDER_RECOIL_TIME = 1
+    BLENDER_RECOIL_TIME = 2
+    BLENDER_START_TIME = 1
+    BLENDER_DESCEND_TIME = 1
 
     def __init__(self):
         self.clock = 0
@@ -31,6 +42,25 @@ class Scheduler:
         self.blend_time = time.time()
         self.blend_recoil_time = time.time()
         self.blend_cycles = 0
+        self.blend_state = BlenderStates.IDLE
+        self.blend_state_timer = time.time()
+
+    def home_everything(self):
+        # Home elevator
+        self.blender.send_command(self.bus, 4, 3)
+        while not self.elevator_idle():
+            time.sleep(0.1)
+
+        # Disable carousel
+        self.carousel.send_command(self.bus, 4, 0)
+
+        # Home pivot
+        self.blender.send_command(self.bus, 3, 1)
+        while not self.pivot_idle():
+            time.sleep(0.1)
+        self.blender.send_command(self.bus, 3, 3)
+        while not self.pivot_idle():
+            time.sleep(0.1)
 
     def empty(self):
         """Check if the machine is empty"""
@@ -46,9 +76,7 @@ class Scheduler:
         if posn not in self.cup_posns:
             self.cup_posns.append(posn)
 
-        self.cup_posns[posn] = True
         self.all_stations_go = False
-
         if posn == 0:
             # Send cup dispense command
             self.dispense.send_command(self.bus, 7, 1)
@@ -72,7 +100,8 @@ class Scheduler:
             # Send blender commands
             self.cup_states[3] = False
             self.blend_time = time.time() + self.BLEND_TIME
-            # self.blender.send_command(self.bus, 4, 2)
+            self.blender.send_command(self.bus, 4, 4)
+            self.blender_state = BlenderStates.SEAL_BLENDER
         elif posn == 4:
             # Wait for cup to be taken 
             self.cup_states[4] = True
@@ -112,17 +141,55 @@ class Scheduler:
         # Check blender
         if not self.cup_states[3]:
             if time.time() >= self.blend_time:
-                print "Done Blending"
-                self.cup_states[3] = True
-                # self.blender.send_command(self.bus, 4, 3)
+                self.blender.send_command(self.bus, 1, 0)
                 time.sleep(0.5)
-            elif time.time() < self.blend_recoil_time:
-                print "Recoiling Blender"
+                self.blender.send_command(self.bus, 4, 3)
+                self.blender_state = BlenderStates.HOMING_BLENDER
+            
+            # State Machine
+            if self.blender_state == BlenderStates.IDLE:
                 pass
-            elif self.elevator_idle:
-                print "Descending Elev"
-                # self.blender.send_command(self.bus, 4, 2)
-                self.blend_recoil_time = time.time() + self.BLENDER_RECOIL_TIME
+            elif self.blender_state == BlenderStates.SEAL_BLENDER:
+                if self.elevator_idle() == True:
+                    self.blender_state = BlenderStates.STARTING_BLENDER
+                    self.blender.send_command(self.bus, 1, 1)
+                    self.blend_state_timer = time.time() + self.BLENDER_START_TIME
+            elif self.blender_state == BlenderStates.STARTING_BLENDER:
+                if time.time() >= self.blend_state_timer:
+                    self.blender_state = BlenderStates.DESCENDING_BLENDER
+                    self.blender.send_command(self.bus, 4, 2)
+                    self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
+            elif self.blender_state == BlenderStates.DESCENDING_BLENDER:
+                if time.time() >= self.blend_state_timer or self.elevator_idle():
+                    self.blender_state = BlenderStates.RECOILING_BLENDER
+                    self.blender.send_command(self.bus, 4, 0)
+                    self.blend_state_timer = time.time() + self.BLENDER_RECOIL_TIME
+            elif self.blender_state == BlenderStates.RECOILING_BLENDER:
+                if time.time() >= self.blend_state_timer:
+                    self.blender_state = BlenderStates.DESCENDING_BLENDER
+                    self.blender.send_command(self.bus, 4, 2)
+                    self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
+            elif self.blend_state == BlenderStates.HOMING_BLENDER:
+                if self.elevator_idle():
+                    self.cup_states[3] = True
+                    self.blend_state = BlenderStates.IDLE
+
+
+
+
+                
+                
+            #     print "Done Blending"
+            #     self.cup_states[3] = True
+            #     # self.blender.send_command(self.bus, 4, 3)
+            #     time.sleep(0.5)
+            # elif time.time() < self.blend_recoil_time:
+            #     print "Recoiling Blender"
+            #     pass
+            # elif self.elevator_idle:
+            #     print "Descending Elev"
+            #     # self.blender.send_command(self.bus, 4, 2)
+            #     self.blend_recoil_time = time.time() + self.BLENDER_RECOIL_TIME
                     
         # Check if cup has been taken
         if not self.cup_states[4] and self.cup_serve_done():
@@ -150,6 +217,13 @@ class Scheduler:
         """Check if the blender is done"""
         self.blender.read_data(print_data=False)
         if self.blender.elevator == 0:
+            return True
+        return False
+    
+    def pivot_idle(self):
+        """Check if the blender is done"""
+        self.blender.read_data(print_data=False)
+        if self.blender.pivot == 0:
             return True
         return False
 

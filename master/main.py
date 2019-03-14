@@ -28,6 +28,8 @@ def flask_server():
 
 def main():
     intro() 
+    scheduler.home_everything()
+    return
     smoothie_queue = []
     carousel_spinning = False
     # while scheduler.empty():
