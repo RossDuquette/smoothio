@@ -326,23 +326,24 @@ bool pivot_setAngle(uint8_t degrees) {
 **********************/
 bool home_elev() {
     if (states.e_homed == 0) {
-        //elevator_move(DOWN, ELEV_SPEED_DOWN);
-        //delay(100);
-        //elevator_move(NEUTRAL, 0);
-        //delay(100);
+        // Perform Homing Routine
         elevator_move(UP, ELEV_BOOST_UP);
         delay(100);
         elevator_move(NEUTRAL, 0);
-        delay(100);
-        elevator_move(UP, ELEV_BOOST_UP);
         delay(100);
         elevator_move(UP, ELEV_SPEED_UP);
         while (elev_limit_top());
         elevator_move(NEUTRAL, 0);
-        delay(100); // Give time to stop before resetting encoder count
+        delay(100);
+        elev_position = 0;
+
+        // Descend slightly
+        elevator_move(DOWN, 150); 
+        delay(25);
+        elevator_move(NEUTRAL, 0); 
+        delay(100);
         states.elevator = E_IDLE;
         states.e_homed = 1;
-        elev_position = 0;
     } else if (states.elevator_height < 20) { // Getting close, look for limit
         elevator_move(UP, ELEV_SPEED_UP);
         while (elev_limit_top());
