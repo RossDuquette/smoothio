@@ -129,14 +129,14 @@ bool carousel_home() {
     stepper.enable();
     stepper.setRPM(HOMING_RPM);
     stepper.startRotate(720);
-    while (digitalRead(CAROUSEL_POS) == 0) {
+    while (digitalRead(CAROUSEL_POS) == 1) {
         stepper.nextAction();
     }
     stepper.stop();
     stepper.setRPM(RPM);
     states.c_state = IDLE;
     read_sensors();
-    if (states.carousel_pos == 1) {
+    if (states.carousel_pos == 0) {
         states.homed = 1;
         return true;
     }
