@@ -215,29 +215,28 @@ class Scheduler:
 
     def elevator_idle(self):
         """Check if the blender is done"""
-        self.blender.read_data(print_data=False)
+        self.blender.read_data(self.bus, print_data=False)
         if self.blender.elevator == 0:
             return True
         return False
     
     def pivot_idle(self):
         """Check if the blender is done"""
-        self.blender.read_data(print_data=False)
+        self.blender.read_data(self.bus, print_data=False)
         if self.blender.pivot == 0:
             return True
         return False
 
     def cup_dispense_done(self):
         """Check if the cup dispense is done"""
-        self.dispense.read_data()
+        self.dispense.read_data(self.bus, print_data=False)
         if self.dispense.cup == 0:
             return True
         return False
 
     def cup_serve_done(self):
         """Check if the cup has been taken from serving station"""
-        self.carousel.read_data()
-        # @ROSS pls check this this is the correct cup-sense
+        self.carousel.read_data(self.bus, print_data=False)
         if self.carousel.cup_sense0 == 0:
             return True
         return False
