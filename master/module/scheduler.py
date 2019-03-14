@@ -47,6 +47,7 @@ class Scheduler:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Scheduler changes
         if not self.check_carousel_idle:
@@ -65,6 +66,11 @@ class Scheduler:
 >>>>>>> Scheduler changes
 =======
 >>>>>>> Scheduler changes
+=======
+        if posn not in self.cup_posns:
+            self.cup_posns.append(posn)
+
+>>>>>>> 6987810eeb92a38f599dd94df5404daf881ab7e2
         self.all_stations_go = False
         if posn == 0:
             # Send cup dispense command
