@@ -9,7 +9,6 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     BLEND1,
     PIV,
     ELEV,
-    ROUT,
     RESET = 255
 } COMM_SELECTOR;
 
@@ -35,13 +34,6 @@ typedef enum PIVOT {  // Pivot state
     P_ROTATE_180
 } PIVOT;
 
-typedef enum ROUTINE {  // Complex commands
-    R_IDLE = 0,
-    R_BLEND_AND_CLEAN,
-    R_CLEAN,
-    R_BLEND
-} ROUTINE;
-
 // State variables, for communication
 typedef struct state_t {
     // Outputs
@@ -49,14 +41,15 @@ typedef struct state_t {
     uint8_t blender1;
     uint8_t elevator;
     uint8_t pivot;
-    uint8_t routine;
 
     // Inputs
     uint8_t p_homed;
     uint8_t e_homed;
     uint8_t pivot_deg;
     uint8_t elevator_height;  // in mm, measured from top
-    uint8_t limit1;
+    uint8_t elev_hall;
+    uint8_t elev_limit_top;
+    uint8_t elev_limit_bot;
     uint8_t limit2;
     uint8_t curr_sense0;
     uint8_t curr_sense1;
@@ -108,22 +101,24 @@ typedef struct state_t {
 
 // Pivot parameters
 #define PIVOT_KP 1
-#define PIVOT_KI 0.01
-#define PIVOT_SS_TIME 500
-#define PIVOT_STICTION 0
+#define PIVOT_KI 0
+#define PIVOT_KD 1
+#define PIVOT_SS_TIME 100
+#define PIVOT_STICTION 100
 #define PIVOT_GEAR_RATIO (298*80/35.0) // Gear motor and external gears
 #define PIVOT_PULSES_REV (PIVOT_GEAR_RATIO*6) // Pulses/rev
 #define PIVOT_PULSE_RATIO (360.0/(float)PIVOT_PULSES_REV) // Degrees/pulse
-#define PIVOT_SPEED 35
-#define PIVOT_MAX_SPEED 255
+#define PIVOT_SPEED 150
+#define PIVOT_MAX_SPEED (200-PIVOT_STICTION)
 
 // Elevator parameters
-#define ELEV_OFF 1510
+#define ELEV_OFF 1500
 #define ELEV_GAIN 1
-#define ELEV_STICTION 250
-#define ELEV_PULSE_RATIO 2 // mm/pulse
-#define ELEV_SPEED_UP 270
-#define ELEV_SPEED_DOWN 270
+#define ELEV_STICTION 150
+#define ELEV_PULSE_RATIO 1 // mm/pulse
+#define ELEV_SPEED_UP 180
+#define ELEV_SPEED_DOWN 220
+#define ELEV_BOOST_UP 200
 #define ELEV_MAX_SPEED 500
 #define ELEV_MID_HEIGHT 50
 #define ELEV_MAX_HEIGHT 100
