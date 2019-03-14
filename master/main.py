@@ -30,22 +30,24 @@ def main():
     intro() 
     # scheduler.add_cup(0)
     carousel_spinning = False
-    while scheduler.empty():
-        pass
-
+    # while scheduler.empty():
+    #     pass
+    scheduler.add_cup(0)
     # Run scheduler until the smoothie has been made
     while not scheduler.empty():
-        scheduler.update()
-        if carousel_spinning and not scheduler.check_carousel_idle():
-            carousel_spinning = False
-            scheduler.shift_cups()
-        if scheduler.check_all_stations_go():
-            
-            scheduler.start_carousel_spin()
-            carousel_spinning = True
+        if carousel_spinning:
+            if scheduler.check_carousel_idle():
+                print "Spinning cups"
+                carousel_spinning = False
+                scheduler.shift_cups()
+        else:
+            scheduler.update()
+            if scheduler.check_all_stations_go():
+                scheduler.start_carousel_spin()
+                carousel_spinning = True
 
 if __name__ == "__main__":
-    thread.start_new_thread(flask_server,())
-    print("Waiting For Flask Server")
-    time.sleep(2)
+    # thread.start_new_thread(flask_server,())
+    # print("Waiting For Flask Server")
+    # time.sleep(2)
     main()
