@@ -60,6 +60,10 @@ void loop() {
             stepper.disable();
             states.c_state = IDLE;
             break;
+        case RESET:
+            state_setup();
+            states.c_state = IDLE;
+            break;
         case IDLE:
         default:
             break;

@@ -9,7 +9,8 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     HOME,
     DISABLE, // Disables the stepper motor, re-enabled on next motion
     CLEAN,
-    IDLE = 255
+    IDLE,
+    RESET = 255
 } COMM_SELECTOR;
 
 typedef enum CLEANING {  // Cleaning pump commands
