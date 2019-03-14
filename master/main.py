@@ -30,15 +30,14 @@ def main():
     intro() 
     scheduler.add_cup(0)
     carousel_spinning = False
-
     # Run scheduler until the smoothie has been made
     while not scheduler.empty():
         scheduler.update()
-        print(scheduler.cup_posns)
         if carousel_spinning and not scheduler.check_carousel_idle():
             carousel_spinning = False
             scheduler.shift_cups()
         if scheduler.check_all_stations_go():
+            
             scheduler.start_carousel_spin()
             carousel_spinning = True
 
