@@ -10,6 +10,7 @@
 Servo ESC;
 volatile int32_t elev_position = 0; // Count elevator encoder pulses
 volatile int32_t pivot_position = 0; // Count pivot encoder pulses
+int32_t pivot_absolute_deg = 0;
 
 state_t states; // Store all system states
 
@@ -63,9 +64,15 @@ void loop() {
             break;
         case P_CW:
             pivot_rotate(CW, PIVOT_SPEED);
+            delay(500);
+            pivot_rotate(NEUTRAL, 0); 
+            states.pivot = P_IDLE;
             break;
         case P_CCW:
             pivot_rotate(CCW, PIVOT_SPEED);
+            delay(500);
+            pivot_rotate(NEUTRAL, 0);
+            states.pivot = P_IDLE;
             break;
         case P_HOME:
             home_pivot();
@@ -295,26 +302,26 @@ bool pivot_setAngle(uint8_t degrees) {
         return false;
     }
     // Check if at angle
-    if (states.pivot_deg == degrees) {
+    if (pivot_absolute_deg == degrees) {
         pivot_rotate(NEUTRAL, 0);
         delay(PIVOT_SS_TIME);
         update_sensors();
-        if (states.pivot_deg == degrees) { // Double check
+        if (pivot_absolute_deg == degrees) { // Double check
             states.pivot = P_IDLE;
             integral = 0;
             return true;
         }
     }
     // Determine direction
-    if (states.pivot_deg > degrees) {
-        dir = CW;
-    } else { // states.pivot_deg < degrees
+    if (pivot_absolute_deg > degrees) {
         dir = CCW;
+    } else { // states.pivot_deg < degrees
+        dir = CW;
     }
     // Determine speed, PI control
-    e = abs((int16_t)degrees-(int16_t)states.pivot_deg);
+    e = (int16_t)degrees-(int16_t)pivot_absolute_deg;
     integral += e;
-    speed = min(0xFF, round(e*PIVOT_KP + integral*PIVOT_KI));
+    speed = min(0xFF, round(abs(e)*PIVOT_KP + integral*PIVOT_KI));
     pivot_rotate(dir, speed);
     delay(1); // Don't let integral grow too quickly
     return true;
@@ -339,7 +346,7 @@ bool home_elev() {
 
         // Descend slightly
         elevator_move(DOWN, 150); 
-        delay(25);
+        delay(35);
         elevator_move(NEUTRAL, 0); 
         delay(100);
         states.elevator = E_IDLE;
@@ -360,21 +367,14 @@ bool home_elev() {
 bool home_pivot() {
     if (states.p_homed == 0) {
         if (pivot_limit()) {
-            pivot_rotate(CW, PIVOT_SPEED);
+            pivot_rotate(CCW, PIVOT_SPEED);
             while (pivot_limit());
             pivot_rotate(NEUTRAL, 0);
+            pivot_position = 2.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
             delay(100); // Give time to stop before resetting encoder count
         }
-        states.pivot = P_IDLE; // Turn off pivot
+        pivot_setAngle(0); // Return pivot to home position
         states.p_homed = 1; // Set as homed
-        pivot_position = 0; // Reset encoder counter
-    } else if (states.pivot_deg < 20) { // Getting close, look for limit
-        pivot_rotate(CW, PIVOT_SPEED);
-        while (pivot_limit());
-        pivot_rotate(NEUTRAL, 0);
-        delay(100);
-        states.elevator = E_IDLE;
-        elev_position = 0;
     } else {
         pivot_setAngle(0);
     }
@@ -391,6 +391,7 @@ bool update_sensors() {
     states.elev_limit_bot = (uint8_t)digitalRead(ELEV_LIMIT_BOTTOM);
     states.limit2 = (uint8_t)pivot_limit();
     states.pivot_deg = (uint8_t)round(pivot_position*PIVOT_PULSE_RATIO); // Convert to degrees
+    pivot_absolute_deg = round(pivot_position*PIVOT_PULSE_RATIO);
     states.elevator_height = (uint8_t)round(elev_position*ELEV_PULSE_RATIO); // Convert to mm
     states.curr_sense0 = analogRead(CURR_SENSE0);
     states.curr_sense1 = analogRead(CURR_SENSE1);
