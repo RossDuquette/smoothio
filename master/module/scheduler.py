@@ -23,6 +23,7 @@ class Scheduler:
         self.cup_states = [True for _ in range(self.carousel.num_slots)]
         self.all_stations_go = True
 
+        self.cup_time = time.time()
         self.frozen_time = time.time()
         self.liquid_time = time.time()
         self.spin_time = time.time()
@@ -59,7 +60,8 @@ class Scheduler:
         if posn == 0:
             # Send cup dispense command
             self.dispense.send_command(self.bus, 7, 1)
-            self.cup_states[0] = True
+            self.cup_time = time.time + self.CUP_DISPENSE_TIME
+            self.cup_states[0] = False
         elif posn == 1:
             # Send frozen dispense commands
             self.dispense.send_command(self.bus, 1, 1)
@@ -75,11 +77,11 @@ class Scheduler:
             self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME
             self.cup_states[2] = False
         elif posn == 3:
-            # TODO: BLENDER ROUTINE
+            # Send blender commands
             self.cup_states[3] = True
             self.blend_cycles = 4
             self.blend_time = time.time + self.BLEND_TIME
-            self.dispense.send_command(self.bus, 4, 2)
+            # self.dispense.send_command(self.bus, 4, 2)
         elif posn == 4:
             # Wait for cup to be taken 
             self.cup_states[4] = True
@@ -101,7 +103,8 @@ class Scheduler:
         if self.all_stations_go or not self.check_carousel_idle():
             return
         # Check cup dispense
-        if not self.cup_states[0] and cup_dispense_done():
+        if not self.cup_states[0] and time.time >= self.cup_time:
+            self.dispense.send_command(self.bus, 7, 0) 
             self.cup_states[0] = True
         # Check frozen dispense
         if not self.cup_states[1] and time.time() >= self.frozen_time:
@@ -126,7 +129,7 @@ class Scheduler:
                     self.cup_states[3] = True
                     self.dispense.send_command(self.bus, 4, 0)
         # Check if cup has been taken
-        if not self.cup_states[4] and cup_serve_done():
+        if not self.cup_states[4] and self.cup_serve_done():
             self.cup_states[4] = True
 
         # Check if all states are idle
@@ -137,7 +140,7 @@ class Scheduler:
             
     def start_carousel_spin(self):
         """Spin carousel one spot"""
-        print "Spinning Carousel"
+        print("Spinning Carousel")
         self.spin_time = time.time() + self.CAROUSEL_SPIN_TIME
         self.carousel.send_command(self.bus, 1, 1)
 
