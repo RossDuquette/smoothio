@@ -101,7 +101,12 @@ void loop() {
             home_elev();
             break;
         case E_MIDPOINT:
-            elevator_setHeight(ELEV_MID_HEIGHT);
+            if (states.e_homed) {
+                elevator_move(DOWN, 140);
+                delay(200);
+                elevator_move(NEUTRAL, 0);
+            }
+            states.elevator = E_IDLE;
             break;
         case E_MAXHEIGHT:
             elevator_setHeight(ELEV_MAX_HEIGHT);
@@ -259,7 +264,7 @@ bool elevator_setHeight(uint8_t height) {
         return false;
     }
     // Check if at height, within a pulse
-    if (states.elevator_height <= height &&
+    if (states.elevator_height-ELEV_PULSE_RATIO <= height &&
         states.elevator_height+ELEV_PULSE_RATIO >= height) {
         elevator_move(NEUTRAL, 0);
         states.elevator = E_IDLE;
@@ -273,7 +278,8 @@ bool elevator_setHeight(uint8_t height) {
         dir = DOWN;
     }
     // Determine speed, P control
-    speed = ELEV_GAIN*abs((int16_t)height-(int16_t)states.elevator_height) + ELEV_STICTION;
+    speed = ELEV_GAIN*abs(height-states.elevator_height) + ELEV_STICTION;
+    speed = min(ELEV_MAX_SPEED, speed);
     elevator_move(dir, speed);
     return true;
 }
@@ -340,35 +346,24 @@ bool pivot_setAngle(uint8_t degrees) {
 *      Routines      *
 **********************/
 bool home_elev() {
-    if (states.e_homed == 0) {
-        // Perform Homing Routine
-        elevator_move(UP, ELEV_BOOST_UP);
-        delay(100);
-        elevator_move(NEUTRAL, 0);
-        delay(100);
-        elevator_move(UP, ELEV_SPEED_UP);
-        while (elev_limit_top());
-        elevator_move(NEUTRAL, 0);
-        delay(100);
-        elev_position = 0;
+    // Perform Homing Routine
+    elevator_move(UP, ELEV_BOOST_UP);
+    delay(100);
+    elevator_move(NEUTRAL, 0);
+    delay(100);
+    elevator_move(UP, ELEV_SPEED_UP);
+    while (elev_limit_top());
+    elevator_move(NEUTRAL, 0);
+    delay(100);
+    elev_position = 0;
 
-        // Descend slightly
-        elevator_move(DOWN, 150); 
-        delay(35);
-        elevator_move(NEUTRAL, 0); 
-        delay(100);
-        states.elevator = E_IDLE;
-        states.e_homed = 1;
-    } else if (states.elevator_height < 20) { // Getting close, look for limit
-        elevator_move(UP, ELEV_SPEED_UP);
-        while (elev_limit_top());
-        elevator_move(NEUTRAL, 0);
-        delay(100);
-        states.elevator = E_IDLE;
-        elev_position = 0;
-    } else {
-        elevator_setHeight(0);
-    }
+    // Descend slightly
+    elevator_move(DOWN, 150); 
+    delay(35);
+    elevator_move(NEUTRAL, 0); 
+    delay(100);
+    states.elevator = E_IDLE;
+    states.e_homed = 1;
     return true;
 }
 
@@ -378,7 +373,7 @@ bool home_pivot() {
             pivot_rotate(CCW, PIVOT_SPEED);
             while (pivot_limit());
             pivot_rotate(NEUTRAL, 0);
-            pivot_position = 2.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
+            pivot_position = 6.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
             delay(100); // Give time to stop before resetting encoder count
         }
         pivot_setAngle(0); // Return pivot to home position
