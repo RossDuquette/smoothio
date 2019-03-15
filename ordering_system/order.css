@@ -8,6 +8,16 @@
 .smoothio-form-submit {
     text-align: center;
 }
+.shape-container {
+  height: 500px;
+  width: 500px;
+}
+img {
+  width: 100px;
+  margin: 30px;
+  visibility: hidden; /* Initially invisible */
+}
+
 
 /* Template CSS */
 .container {
