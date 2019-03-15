@@ -11,7 +11,6 @@ import json
 app = Flask(__name__)
 scheduler = scdr.Scheduler()
 smoothie_queue = []
-smoothie_info = []
 secrets = set()
 
 def intro():
@@ -21,15 +20,27 @@ def intro():
     ---------------------
     """)
 
-@app.route("/enqueue", methods=['POST'])
+@app.route("/enqueue", methods=['GET'])
 def enqueue():
     print("Enqueuing Smoothie")
-    content = request.json
-    print "content: ", content 
+    content = request.args
+    secret = content['secret']
+    solid = []
+    for s in content['solid']:
+        if s == 't':
+            solid.append(True)
+        else:
+            solid.append(False)
+    liquid = []
+    for s in content['liquid']:
+        if s == 't':
+            liquid.append(True)
+        else:
+            liquid.append(False)
+    info = {'solid': solid, 'liquid': liquid, 'posn': 0}
     if content['secret'] in secrets:
         secrets.remove(content['secret'])
-        smoothie_queue.append(0)
-        smoothie_info.append(content)
+        smoothie_queue.append(info)
     else:
         return "Secret invalid or already used"
     return "Request satisfied"
@@ -58,25 +69,25 @@ def main():
         resp = input("Send any command when done homing: ")
 
         carousel_spinning = False
-        # while scheduler.empty():
-        #     pass
-        smoothie_queue.append(0)
+
+        sample_order = {'solid':[True, True, True], 'liquid':[True, True, True], 'posn':0}
+        smoothie_queue.append(sample_order)
 
         # Run scheduler until the smoothie has been made
         while True:
             print(scheduler.cup_posns)
             if scheduler.empty() and len(smoothie_queue) > 0:
-                smoothie_queue.pop()
-                scheduler.cup_posns.append(0)
-                scheduler.add_cup(0) 
+                info = smoothie_queue.pop()
+                scheduler.cup_posns.append(info)
+                scheduler.add_cup(info) 
             if carousel_spinning:
                 if scheduler.check_carousel_idle():
                     carousel_spinning = False
                     scheduler.shift_cups()
                     if len(smoothie_queue) > 0:
-                        smoothie_queue.pop()
-                        scheduler.cup_posns.append(0)
-                        scheduler.add_cup(0)
+                        info = smoothie_queue.pop()
+                        scheduler.cup_posns.append(info)
+                        scheduler.add_cup(info)
             else:
                 scheduler.update()
                 if scheduler.check_all_stations_go():

@@ -3,7 +3,7 @@
 ###########################
 import module.module_def as mods
 import time
-import smbus
+# import smbus
 
 class BlenderStates:
     IDLE = 0
@@ -29,7 +29,7 @@ class Scheduler:
         self.blender = mods.Blender()
         self.carousel = mods.Carousel()
         self.dispense = mods.Dispense()
-        self.bus = smbus.SMBus(1)
+        # self.bus = smbus.SMBus(1)
 
         self.cup_posns = []
         self.cup_states = [True for _ in range(self.carousel.num_slots)]
@@ -77,10 +77,18 @@ class Scheduler:
     def check_all_stations_go(self):
         return self.all_stations_go
 
-    def add_cup(self, posn):
+    def add_cup(self, info):
         """Add cup to queue and start action"""
-        # if posn not in self.cup_posns:
-        #     self.cup_posns.append(posn)
+
+        posn = info['posn']
+        solid = info['solid']
+        liquid = info['liquid']
+        liquid_count = 0
+        for l in liquid:
+            if l == True:
+                liquid_count += 1
+        liquid_multiplier = 3.0 / liquid_count
+
 
         self.all_stations_go = False
         if posn == 0:
@@ -90,17 +98,23 @@ class Scheduler:
             self.cup_states[0] = False
         elif posn == 1:
             # Send frozen dispense commands
-            self.dispense.send_command(self.bus, 1, 1)
-            self.dispense.send_command(self.bus, 2, 1)
-            self.dispense.send_command(self.bus, 3, 1)
+            if solid[0]:
+                self.dispense.send_command(self.bus, 1, 1)
+            if solid[1]:
+                self.dispense.send_command(self.bus, 2, 1)
+            if solid[2]:
+                self.dispense.send_command(self.bus, 3, 1)
             self.frozen_time = time.time() + self.FROZEN_DISPENSE_TIME
             self.cup_states[1] = False
         elif posn == 2:
             # Send liquid dispense commands
-            self.dispense.send_command(self.bus, 4, 1)
-            self.dispense.send_command(self.bus, 5, 1)
-            self.dispense.send_command(self.bus, 6, 1)
-            self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME
+            if liquid[0]:
+                self.dispense.send_command(self.bus, 4, 1)
+            if liquid[1]:
+                self.dispense.send_command(self.bus, 5, 1)
+            if liquid[2]:
+                self.dispense.send_command(self.bus, 6, 1)
+            self.liquid_time = time.time() + self.LIQUID_DISPENSE_TIME * liquid_multiplier
             self.cup_states[2] = False
         elif posn == 3:
             # Send blender commands
@@ -116,7 +130,7 @@ class Scheduler:
     def shift_cups(self):
         """Shift all cups by one slot"""
         for i, cp in enumerate(self.cup_posns):
-            self.cup_posns[i] += 1
+            self.cup_posns[i]['posn'] += 1
             self.add_cup(self.cup_posns[i])
 
     def update(self):
@@ -185,7 +199,7 @@ class Scheduler:
             if not self.cup_states[4] and self.cup_serve_done():
                 self.cup_states[4] = True
                 for i, cp in enumerate(self.cup_posns):
-                    if cp == 4:
+                    if cp['posn'] == 4:
                         self.cup_posns.pop(i)
 
             # Check if all states are idle
