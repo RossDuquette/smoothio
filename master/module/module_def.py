@@ -9,7 +9,7 @@ class Blender:
         2 : "Blender 1",
         3 : "Pivot",
         4 : "Elevator",
-        5 : "Cleaning",
+        5 : "Pivot offset",
         255 : "Reset"
     }
     blender_states = {
@@ -111,8 +111,8 @@ class Blender:
             for key,val in self.elevator_states.items():
                 print "        {} : {}".format(key,val)
         elif selector == 5:
-            for key,val in self.routine_states.items():
-                print "        {} : {}".format(key,val)
+            print "        Enter offset in degrees\n"
+            print "        (-1==255, -2==254, etc.)"
         print ""
 
     # Main handle
@@ -146,6 +146,7 @@ class Carousel:
         4 : "DISABLE STEPPER",
         5 : "CLEAN",
         6 : "IDLE",
+        7 : "JIGGLE",
         255 : "RESET"
     }
     clean_states = {

@@ -9,6 +9,7 @@ typedef enum COMM_SELECTOR {  // Decode message from master
     BLEND1,
     PIV,
     ELEV,
+    PIV_OFFSET,
     RESET = 255
 } COMM_SELECTOR;
 
