@@ -62,7 +62,8 @@
             <!-- <div class="bg-light box-shadow mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;"></div> -->
 
 
-            <form name="orderForm" onsubmit="sendOrderRequest()">
+            <form name="orderForm" onsubmit="sendOrderRequest()" style="padding-bottom: 30px">
+
                 <h5>Solid Food Options</h5>
                 <div class="
                 form-row" style="padding-bottom: 30px">
@@ -95,15 +96,22 @@
                     <div class="col-4 form-check">
                         <input class="form-check-input" type="checkbox" value="" id="liquid-dispense2">
                         <label class="form-check-label" for="defaultCheck1">
-                            Fruit Juice
+                            Cranberry Juice
                         </label>
                     </div>
                     <div class="col-4 form-check">
                         <input class="form-check-input" type="checkbox" value="" id="liquid-dispense3">
                         <label class="form-check-label" for="defaultCheck1">
-                            Milk
+                            Yogurt
                         </label>
                     </div>
+                </div>
+
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Secret Code</span>
+                    </div>
+                    <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Submit Order</button>
