@@ -29,7 +29,7 @@ class Scheduler:
         self.blender = mods.Blender()
         self.carousel = mods.Carousel()
         self.dispense = mods.Dispense()
-        # self.bus = smbus.SMBus(1)
+        self.bus = smbus.SMBus(1)
 
         self.cup_posns = []
         self.cup_states = [True for _ in range(self.carousel.num_slots)]
