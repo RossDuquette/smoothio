@@ -60,6 +60,10 @@ void loop() {
             stepper.disable();
             states.c_state = IDLE;
             break;
+        case JIGGLE:
+            carousel_jiggle();
+            states.c_state = IDLE;
+            break;
         case RESET:
             state_setup();
             states.c_state = IDLE;
@@ -158,4 +162,11 @@ bool carousel_rotate(uint8_t dir, uint8_t n) {
     states.c_state = IDLE;
     states.num_cups = 0;
     return true; 
+}
+
+bool carousel_jiggle() {
+    stepper.enable();
+    stepper.rotate(1*GEAR_RATIO);
+    stepper.rotate(-2*GEAR_RATIO);
+    stepper.rotate(1*GEAR_RATIO);
 }

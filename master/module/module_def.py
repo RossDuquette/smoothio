@@ -146,6 +146,7 @@ class Carousel:
         4 : "DISABLE STEPPER",
         5 : "CLEAN",
         6 : "IDLE",
+        7 : "JIGGLE",
         255 : "RESET"
     }
     clean_states = {

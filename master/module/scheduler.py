@@ -170,7 +170,8 @@ class Scheduler:
                     self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
             elif self.blender_state == BlenderStates.HOMING_BLENDER:
                 if self.elevator_idle():
-                    time.sleep(1)
+                    self.carousel.send_command(self.bus, 7, 0)
+                    time.sleep(3)
                     self.rotate_pivot()
                     self.cup_states[3] = True
                     self.blender_state = BlenderStates.IDLE
