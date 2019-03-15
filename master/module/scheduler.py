@@ -140,6 +140,7 @@ class Scheduler:
         if not self.cup_states[3]:
             if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
                 self.blender.send_command(self.bus, 1, 0)
+                self.carousel.send_command(self.bus, 1, 0) # Enable stepper
                 time.sleep(0.5)
                 self.blender.send_command(self.bus, 4, 3)
                 self.blender_state = BlenderStates.HOMING_BLENDER
