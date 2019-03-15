@@ -27,7 +27,7 @@ function validateFormData(data) {
     // Need to have at least one solid food and one liquid food selected.
     if ((data.solid[0] || data.solid[1] || data.solid[2])
         && (data.liquid[0] || data.liquid[1] || data.liquid[2])
-        && secret.length > 0) {
+        && data.secret.length > 0) {
         return true;
     }
     return false;
@@ -47,22 +47,28 @@ function sendOrderRequest() {
     alert("Rquest Successful");
 }
 
+function setImageVisible(id, visible) {
+    var img = document.getElementById(id);
+    img.style.visibility = (visible ? 'visible' : 'hidden');
+}
+
 // Event Listeners
 window.onload = function () {
-    // Submit Event Listener
-    $('#orderForm').submit(function () {
-        // sendOrderRequest();
-        return false;
-    });
-
     // Checkbox Event Listeners
-    var checkbox = document.getElementById("solid-dispense1");
-    checkbox.addEventListener('change', function () {
-        if (this.checked) {
-            console.log("Clicked");
-        } else {
-            console.log("Unclicked");
-        }
+    var checboxImagePairs = [
+        ["solid-dispense1", "img-strawberry"],
+        ["solid-dispense2", "img-blueberry"],
+        ["solid-dispense3", "img-banana"],
+        ["liquid-dispense1", "img-orange"],
+        ["liquid-dispense2", "img-cranberry"],
+        ["liquid-dispense3", "img-yogurt"]
+    ];
+
+    checboxImagePairs.forEach(function (pair) {
+        var checkbox = document.getElementById(pair[0]);
+        checkbox.addEventListener('change', function () {
+            setImageVisible(pair[1], this.checked);
+        });
     });
 
     var submitButton = document.getElementById("submit-button");
