@@ -45,8 +45,8 @@ def main():
         print scheduler.cup_posns
         if scheduler.empty() and len(smoothie_queue) > 0:
             smoothie_queue.pop()
-            scheduler.cup_posns.append(0)
-            scheduler.add_cup(0) 
+            scheduler.cup_posns.append(3)
+            scheduler.add_cup(3) 
         if carousel_spinning:
             if scheduler.check_carousel_idle():
                 carousel_spinning = False
