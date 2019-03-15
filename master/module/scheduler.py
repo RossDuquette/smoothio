@@ -180,7 +180,7 @@ class Scheduler:
                     self.blender_state = BlenderStates.IDLE
                     
         # Check if cup has been taken
-        if not self.cup_states[4]: # and self.cup_serve_done():
+        if not self.cup_states[4] and self.cup_serve_done():
             self.cup_states[4] = True
             for i, cp in enumerate(self.cup_posns):
                 if cp == 4:
@@ -228,7 +228,7 @@ class Scheduler:
     def cup_serve_done(self):
         """Check if the cup has been taken from serving station"""
         self.carousel.read_data(self.bus, print_data=False)
-        if self.carousel.cup_sense0 == 0:
+        if self.carousel.cup_sense1 == 0:
             return True
         return False
 
