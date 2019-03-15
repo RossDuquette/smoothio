@@ -18,9 +18,9 @@ class Scheduler:
     FROZEN_DISPENSE_TIME = 7
     LIQUID_DISPENSE_TIME = 7
     CAROUSEL_SPIN_TIME = 2
-    BLEND_TIME = 20
+    BLEND_TIME = 30
     CUP_DISPENSE_TIME = 2
-    BLENDER_RECOIL_TIME = 0.5
+    BLENDER_RECOIL_TIME = 0.15
     BLENDER_START_TIME = 1
     BLENDER_DESCEND_TIME = 1
 
@@ -116,75 +116,77 @@ class Scheduler:
 
     def update(self):
         """Non-blocking update routine"""
+        try:
+            # Check if there is anything to do
+            if self.all_stations_go or not self.check_carousel_idle():
+                return
+            # Check cup dispense
+            if not self.cup_states[0] and time.time() >= self.cup_time:
+                self.dispense.send_command(self.bus, 7, 0) 
+                self.cup_states[0] = True
+            # Check frozen dispense
+            if not self.cup_states[1] and time.time() >= self.frozen_time:
+                self.dispense.send_command(self.bus, 1, 0)
+                self.dispense.send_command(self.bus, 2, 0)
+                self.dispense.send_command(self.bus, 3, 0) 
+                self.cup_states[1] = True
+            # Check liquid dispense
+            if not self.cup_states[2] and time.time() >= self.liquid_time:
+                self.dispense.send_command(self.bus, 4, 0)
+                self.dispense.send_command(self.bus, 5, 0)
+                self.dispense.send_command(self.bus, 6, 0) 
+                self.cup_states[2] = True
+            # Check blender
+            if not self.cup_states[3]:
+                if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
+                    self.blender.send_command(self.bus, 1, 0)
+                    time.sleep(0.5)
+                    self.blender.send_command(self.bus, 4, 3)
+                    self.blender_state = BlenderStates.HOMING_BLENDER
+                
+                # State Machine
+                if self.blender_state == BlenderStates.IDLE:
+                    pass
+                elif self.blender_state == BlenderStates.SEAL_BLENDER:
+                    if self.elevator_idle() == True:
+                        self.blender_state = BlenderStates.STARTING_BLENDER
+                        self.blender.send_command(self.bus, 1, 1)
+                        self.blend_state_timer = time.time() + self.BLENDER_START_TIME
+                elif self.blender_state == BlenderStates.STARTING_BLENDER:
+                    if time.time() >= self.blend_state_timer:
+                        self.blender_state = BlenderStates.DESCENDING_BLENDER
+                        self.blender.send_command(self.bus, 4, 2)
+                        self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
+                elif self.blender_state == BlenderStates.DESCENDING_BLENDER:
+                    if time.time() >= self.blend_state_timer or self.elevator_idle():
+                        self.blender_state = BlenderStates.RECOILING_BLENDER
+                        self.blender.send_command(self.bus, 4, 0)
+                        self.blend_state_timer = time.time() + self.BLENDER_RECOIL_TIME
+                elif self.blender_state == BlenderStates.RECOILING_BLENDER:
+                    if time.time() >= self.blend_state_timer:
+                        self.blender_state = BlenderStates.DESCENDING_BLENDER
+                        self.blender.send_command(self.bus, 4, 2)
+                        self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
+                elif self.blender_state == BlenderStates.HOMING_BLENDER:
+                    if self.elevator_idle():
+                        self.rotate_pivot()
+                        self.cup_states[3] = True
+                        self.blender_state = BlenderStates.IDLE
+                        
+            # Check if cup has been taken
+            if not self.cup_states[4] and self.cup_serve_done():
+                self.cup_states[4] = True
+                for i, cp in enumerate(self.cup_posns):
+                    if cp == 4:
+                        self.cup_posns.pop(i)
 
-        # Check if there is anything to do
-        if self.all_stations_go or not self.check_carousel_idle():
-            return
-        # Check cup dispense
-        if not self.cup_states[0] and time.time() >= self.cup_time:
-            self.dispense.send_command(self.bus, 7, 0) 
-            self.cup_states[0] = True
-        # Check frozen dispense
-        if not self.cup_states[1] and time.time() >= self.frozen_time:
-            self.dispense.send_command(self.bus, 1, 0)
-            self.dispense.send_command(self.bus, 2, 0)
-            self.dispense.send_command(self.bus, 3, 0) 
-            self.cup_states[1] = True
-        # Check liquid dispense
-        if not self.cup_states[2] and time.time() >= self.liquid_time:
-            self.dispense.send_command(self.bus, 4, 0)
-            self.dispense.send_command(self.bus, 5, 0)
-            self.dispense.send_command(self.bus, 6, 0) 
-            self.cup_states[2] = True
-        # Check blender
-        if not self.cup_states[3]:
-            if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
-                self.blender.send_command(self.bus, 1, 0)
-                time.sleep(0.5)
-                self.blender.send_command(self.bus, 4, 3)
-                self.blender_state = BlenderStates.HOMING_BLENDER
-            
-            # State Machine
-            if self.blender_state == BlenderStates.IDLE:
-                pass
-            elif self.blender_state == BlenderStates.SEAL_BLENDER:
-                if self.elevator_idle() == True:
-                    self.blender_state = BlenderStates.STARTING_BLENDER
-                    self.blender.send_command(self.bus, 1, 1)
-                    self.blend_state_timer = time.time() + self.BLENDER_START_TIME
-            elif self.blender_state == BlenderStates.STARTING_BLENDER:
-                if time.time() >= self.blend_state_timer:
-                    self.blender_state = BlenderStates.DESCENDING_BLENDER
-                    self.blender.send_command(self.bus, 4, 2)
-                    self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
-            elif self.blender_state == BlenderStates.DESCENDING_BLENDER:
-                if time.time() >= self.blend_state_timer or self.elevator_idle():
-                    self.blender_state = BlenderStates.RECOILING_BLENDER
-                    self.blender.send_command(self.bus, 4, 0)
-                    self.blend_state_timer = time.time() + self.BLENDER_RECOIL_TIME
-            elif self.blender_state == BlenderStates.RECOILING_BLENDER:
-                if time.time() >= self.blend_state_timer:
-                    self.blender_state = BlenderStates.DESCENDING_BLENDER
-                    self.blender.send_command(self.bus, 4, 2)
-                    self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
-            elif self.blender_state == BlenderStates.HOMING_BLENDER:
-                if self.elevator_idle():
-                    self.rotate_pivot()
-                    self.cup_states[3] = True
-                    self.blender_state = BlenderStates.IDLE
-                    
-        # Check if cup has been taken
-        if not self.cup_states[4] and self.cup_serve_done():
-            self.cup_states[4] = True
-            for i, cp in enumerate(self.cup_posns):
-                if cp == 4:
-                    self.cup_posns.pop(i)
-
-        # Check if all states are idle
-        self.all_stations_go = True
-        for cs in self.cup_states:
-            if cs == False:
-                self.all_stations_go = False
+            # Check if all states are idle
+            self.all_stations_go = True
+            for cs in self.cup_states:
+                if cs == False:
+                    self.all_stations_go = False
+        except:
+            print("Missed Command. Trying again")
             
     def start_carousel_spin(self):
         """Spin carousel one spot"""
