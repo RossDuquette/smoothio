@@ -44,6 +44,8 @@ class Scheduler:
         self.blend_cycles = 0
         self.blender_state = BlenderStates.IDLE
         self.blend_state_timer = time.time()
+        self.pivot_location = 0
+        self.blender_dirty = 0
 
     def home_everything(self):
         # Home elevator
@@ -104,7 +106,7 @@ class Scheduler:
             self.blender_state = BlenderStates.SEAL_BLENDER
             self.carousel.send_command(self.bus, 4, 0)
         elif posn == 4:
-            # Wait for cup to be taken 
+            # Wait for cup to be taken
             self.cup_states[4] = False
 
     def shift_cups(self):
@@ -139,6 +141,8 @@ class Scheduler:
         if not self.cup_states[3]:
             if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
                 self.blender.send_command(self.bus, 1, 0)
+                if self.blender_dirty == 1:
+                    self.carousel.send_command(self.bus, 5, 0)
                 time.sleep(0.5)
                 self.blender.send_command(self.bus, 4, 3)
                 self.blender_state = BlenderStates.HOMING_BLENDER
@@ -150,6 +154,8 @@ class Scheduler:
                 if self.elevator_idle() == True:
                     self.blender_state = BlenderStates.STARTING_BLENDER
                     self.blender.send_command(self.bus, 1, 1)
+                    if self.blender_dirty == 1:
+                        self.carousel.send_command(self.bus, 5, 1)
                     self.blend_state_timer = time.time() + self.BLENDER_START_TIME
             elif self.blender_state == BlenderStates.STARTING_BLENDER:
                 if time.time() >= self.blend_state_timer:
@@ -168,6 +174,8 @@ class Scheduler:
                     self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
             elif self.blender_state == BlenderStates.HOMING_BLENDER:
                 if self.elevator_idle():
+                    self.rotate_pivot()
+                    self.blender_dirty = 1
                     self.cup_states[3] = True
                     self.blender_state = BlenderStates.IDLE
                     
@@ -223,3 +231,11 @@ class Scheduler:
         if self.carousel.cup_sense0 == 0:
             return True
         return False
+
+    def rotate_pivot(self):
+        if self.pivot_location == 0:
+            self.blender.send_command(self.bus, 3, 4)
+            self.pivot_location = 180
+        else:
+            self.blender.send_command(self.bus, 3, 3)
+            self.pivot_location = 0
