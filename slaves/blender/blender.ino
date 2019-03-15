@@ -11,7 +11,7 @@ Servo ESC;
 volatile int32_t elev_position = 0; // Count elevator encoder pulses
 volatile int32_t pivot_position = 0; // Count pivot encoder pulses
 int32_t pivot_absolute_deg = 0;
-int8_t pivot_offset = 5;
+int8_t pivot_offset = 4;
 
 state_t states; // Store all system states
 
