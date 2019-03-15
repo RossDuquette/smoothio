@@ -229,7 +229,11 @@ class Scheduler:
     def rotate_pivot(self):
         if self.pivot_location == 0:
             self.blender.send_command(self.bus, 3, 4)
+            while not self.pivot_idle():
+                time.sleep(0.1)
             self.pivot_location = 180
         else:
             self.blender.send_command(self.bus, 3, 3)
+            while not self.pivot_idle():
+                time.sleep(0.1)
             self.pivot_location = 0

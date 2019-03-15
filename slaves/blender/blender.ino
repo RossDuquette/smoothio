@@ -373,7 +373,7 @@ bool home_pivot() {
             pivot_rotate(CCW, PIVOT_SPEED);
             while (pivot_limit());
             pivot_rotate(NEUTRAL, 0);
-            pivot_position = 6.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
+            pivot_position = 5.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
             delay(100); // Give time to stop before resetting encoder count
         }
         pivot_setAngle(0); // Return pivot to home position
