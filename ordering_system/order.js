@@ -19,6 +19,7 @@ function stripFormData() {
 }
 
 function validateFormData(data) {
+    console.log(data);
     // Need to have at least one solid food and one liquid food selected.
     if ((data.solidDispenseOptions[0] || data.solidDispenseOptions[1] || data.solidDispenseOptions[2])
         && (data.liquidDispenseOptions[0] || data.liquidDispenseOptions[1] || data.liquidDispenseOptions[2])) {
@@ -28,6 +29,7 @@ function validateFormData(data) {
 }
 
 function sendOrderRequest() {
+    console.log("test");
     var formData = stripFormData();
     if (!validateFormData(formData)) {
         alert("Invalid Order!")
@@ -39,3 +41,27 @@ function sendOrderRequest() {
     });
     alert("Rquest Successful");
 }
+
+// Event Listeners
+window.onload = function () {
+    // Submit Event Listener
+    $('#orderForm').submit(function () {
+        // sendOrderRequest();
+        return false;
+    });
+
+    // Checkbox Event Listeners
+    var checkbox = document.getElementById("solid-dispense1");
+    checkbox.addEventListener('change', function () {
+        if (this.checked) {
+            return;
+        } else {
+            return;
+        }
+    });
+
+    var submitButton = document.getElementById("submit-button");
+    submitButton.addEventListener('click', function () {
+        console.log("SUBMIT");
+    });
+};
