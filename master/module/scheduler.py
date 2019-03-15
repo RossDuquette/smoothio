@@ -15,12 +15,12 @@ class BlenderStates:
     HOMING_BLENDER = 6
 
 class Scheduler:
-    FROZEN_DISPENSE_TIME = 7
-    LIQUID_DISPENSE_TIME = 7
+    FROZEN_DISPENSE_TIME = 4
+    LIQUID_DISPENSE_TIME = 4
     CAROUSEL_SPIN_TIME = 2
     BLEND_TIME = 20
     CUP_DISPENSE_TIME = 2
-    BLENDER_RECOIL_TIME = 0.5
+    BLENDER_RECOIL_TIME = 0.15
     BLENDER_START_TIME = 1
     BLENDER_DESCEND_TIME = 1
 
@@ -44,6 +44,7 @@ class Scheduler:
         self.blend_cycles = 0
         self.blender_state = BlenderStates.IDLE
         self.blend_state_timer = time.time()
+        self.pivot_location = 0
 
     def home_everything(self):
         # Home elevator
@@ -104,7 +105,7 @@ class Scheduler:
             self.blender_state = BlenderStates.SEAL_BLENDER
             self.carousel.send_command(self.bus, 4, 0)
         elif posn == 4:
-            # Wait for cup to be taken 
+            # Wait for cup to be taken
             self.cup_states[4] = False
 
     def shift_cups(self):
@@ -139,6 +140,7 @@ class Scheduler:
         if not self.cup_states[3]:
             if time.time() >= self.blend_time and self.blender_state != BlenderStates.HOMING_BLENDER:
                 self.blender.send_command(self.bus, 1, 0)
+                self.carousel.send_command(self.bus, 1, 0) # Enable stepper
                 time.sleep(0.5)
                 self.blender.send_command(self.bus, 4, 3)
                 self.blender_state = BlenderStates.HOMING_BLENDER
@@ -168,11 +170,14 @@ class Scheduler:
                     self.blend_state_timer = time.time() + self.BLENDER_DESCEND_TIME
             elif self.blender_state == BlenderStates.HOMING_BLENDER:
                 if self.elevator_idle():
+                    self.carousel.send_command(self.bus, 7, 0)
+                    time.sleep(3)
+                    self.rotate_pivot()
                     self.cup_states[3] = True
                     self.blender_state = BlenderStates.IDLE
                     
         # Check if cup has been taken
-        if not self.cup_states[4]: # and self.cup_serve_done():
+        if not self.cup_states[4] and self.cup_serve_done():
             self.cup_states[4] = True
             for i, cp in enumerate(self.cup_posns):
                 if cp == 4:
@@ -220,6 +225,18 @@ class Scheduler:
     def cup_serve_done(self):
         """Check if the cup has been taken from serving station"""
         self.carousel.read_data(self.bus, print_data=False)
-        if self.carousel.cup_sense0 == 0:
+        if self.carousel.cup_sense1 == 0:
             return True
         return False
+
+    def rotate_pivot(self):
+        if self.pivot_location == 0:
+            self.blender.send_command(self.bus, 3, 4)
+            while not self.pivot_idle():
+                time.sleep(0.1)
+            self.pivot_location = 180
+        else:
+            self.blender.send_command(self.bus, 3, 3)
+            while not self.pivot_idle():
+                time.sleep(0.1)
+            self.pivot_location = 0
