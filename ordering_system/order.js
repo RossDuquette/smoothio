@@ -41,9 +41,9 @@ function sendOrderRequest() {
         return;
     }
 
-    // $.post(url, formData, function (data, status) {
-    //     console.log('${status}');
-    // });
+    $.post(url, formData, function (data, status) {
+        console.log('${status}');
+    });
     alert("Rquest Successful");
 }
 
@@ -54,6 +54,12 @@ function setImageVisible(id, visible) {
 
 // Event Listeners
 window.onload = function () {
+    // Override so page doesn't refresh.
+    $('#orderForm').submit(function () {
+        // sendOrderRequest();
+        return false;
+    });
+
     // Checkbox Event Listeners
     var checboxImagePairs = [
         ["solid-dispense1", "img-strawberry"],
