@@ -6,7 +6,6 @@ import module.scheduler as scdr
 from flask import Flask, request, jsonify
 import thread
 import time
-import json
 
 app = Flask(__name__)
 scheduler = scdr.Scheduler()

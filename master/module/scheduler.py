@@ -3,7 +3,7 @@
 ###########################
 import module.module_def as mods
 import time
-# import smbus
+import smbus
 
 class BlenderStates:
     IDLE = 0
