@@ -11,6 +11,7 @@ import json
 app = Flask(__name__)
 scheduler = scdr.Scheduler()
 smoothie_queue = []
+smoothie_info = []
 secrets = set()
 
 def intro():
@@ -23,11 +24,12 @@ def intro():
 @app.route("/enqueue", methods=['POST'])
 def enqueue():
     print("Enqueuing Smoothie")
-    smoothie_queue.append(0)
     content = request.json
-    content['posn'] = 0
+    print "content: ", content 
     if content['secret'] in secrets:
         secrets.remove(content['secret'])
+        smoothie_queue.append(0)
+        smoothie_info.append(content)
     else:
         return "Secret invalid or already used"
     return "Request satisfied"
@@ -48,10 +50,10 @@ def main():
         read_secrets()
         while True:
             time.sleep(1)
-            print secrets
+            # print(secrets)
 
 
-        print "Homing Everything"
+        print("Homing Everything")
         scheduler.home_everything()
         resp = input("Send any command when done homing: ")
 
@@ -62,7 +64,7 @@ def main():
 
         # Run scheduler until the smoothie has been made
         while True:
-            print scheduler.cup_posns
+            print(scheduler.cup_posns)
             if scheduler.empty() and len(smoothie_queue) > 0:
                 smoothie_queue.pop()
                 scheduler.cup_posns.append(0)
