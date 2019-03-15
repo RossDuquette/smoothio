@@ -1,4 +1,4 @@
-const url = "http://192.168.1.134:5000/enqueue";
+const endpoint = "http://192.168.1.134:5000/enqueue";
 
 function stripFormData() {
     var solidDispenseOptions = [false, false, false];
@@ -15,9 +15,17 @@ function stripFormData() {
 
     secret = document.getElementById("secret-code").value;
 
+    // Serialize Dispense Options for easy string passing
+    var solidStr = "";
+    var liquidStr = "";
+    for (var i = 0; i < 3; i++) {
+        solidStr += solidDispenseOptions[i] ? "1" : "0";
+        liquidStr += liquidDispenseOptions[i] ? "1" : "0";
+    }
+
     return {
-        solid: solidDispenseOptions,
-        liquid: liquidDispenseOptions,
+        solid: solidStr,
+        liquid: liquidStr,
         secret: secret
     };
 }
@@ -25,26 +33,66 @@ function stripFormData() {
 function validateFormData(data) {
     console.log(data);
     // Need to have at least one solid food and one liquid food selected.
-    if ((data.solid[0] || data.solid[1] || data.solid[2])
-        && (data.liquid[0] || data.liquid[1] || data.liquid[2])
-        && data.secret.length > 0) {
+    if (data.solid.includes("1") && data.liquid.includes("1") && data.secret.length > 0) {
         return true;
     }
     return false;
+}
+
+function formatParams(params) {
+    return "?" + Object
+        .keys(params)
+        .map(function (key) {
+            return key + "=" + encodeURIComponent(params[key])
+        })
+        .join("&")
 }
 
 function sendOrderRequest() {
     console.log("sendOrderRequest");
     var formData = stripFormData();
     if (!validateFormData(formData)) {
-        alert("Invalid Order!")
+        alert("You must select at least 1 solid, 1 liquid, and provide a secret.")
         return;
     }
 
-    $.post(url, formData, function (data, status) {
-        console.log('${status}');
+    // Backup HTTP GET request
+    const xhr = new XMLHttpRequest();
+    var url = endpoint + formatParams(formData)
+
+    // $.get(url, function (responseText) {
+    //     alert(responseText);
+    // });
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: 'jsonp', // necessary, because you're sending json from server
+        cors: true,
+        contentType: 'application/json',
+        secure: true,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
+        success: function (reponse) {  // response will catch within success functio
+            console.log(response);
+            alert("Success, making smoothie.");
+        },
+        error: function (request, error) {  // response will catch within success function
+            console.log(error);
+            alert("Failure, could not make smoothie.")
+        }
+
     });
-    alert("Rquest Successful");
+
+    // xhr.open("GET", url, true);
+    // xhr.onreadystatechange = function () {
+    //     if (xhr.readyState == XMLHttpRequest.DONE) {
+    //         alert(xhr.responseText);
+    //     }
+    // }
+    // xhr.send(null);
+
 }
 
 function setImageVisible(id, visible) {

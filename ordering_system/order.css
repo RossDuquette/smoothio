@@ -16,8 +16,8 @@
 }
 .smoothio-order-div {
   /* commented out bg-dark class */
-  background-color: #DB7093;
-  backg
+  background-color: #B86997;
+  color: black;
 }
 .shape-container {
   height: 500px;
@@ -39,6 +39,7 @@
   color: #FFFF;
   text-shadow: 1px 1px 2px black, 0 0 1em black, 0 0 0.2em black;
 }
+
 .left-h2 {
   text-shadow: 1px 1px 2px black, 0 0 1em black, 0 0 0.2em black;
  }
