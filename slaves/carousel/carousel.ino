@@ -166,7 +166,7 @@ bool carousel_rotate(uint8_t dir, uint8_t n) {
 
 bool carousel_jiggle() {
     stepper.enable();
-    stepper.rotate(1*GEAR_RATIO);
+    stepper.rotate(2*GEAR_RATIO);
+    delay(100);
     stepper.rotate(-2*GEAR_RATIO);
-    stepper.rotate(1*GEAR_RATIO);
 }
