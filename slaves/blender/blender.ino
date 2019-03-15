@@ -11,6 +11,7 @@ Servo ESC;
 volatile int32_t elev_position = 0; // Count elevator encoder pulses
 volatile int32_t pivot_position = 0; // Count pivot encoder pulses
 int32_t pivot_absolute_deg = 0;
+int8_t pivot_offset = 5;
 
 state_t states; // Store all system states
 
@@ -145,6 +146,13 @@ void receiveData(int byteCount) {
                 case ELEV:
                     states.elevator = data;
                     break;
+                case PIV_OFFSET:
+                    if (data >= 128) {
+                        pivot_offset = data-256;
+                    } else {
+                        pivot_offset = data;
+                    }
+                    // no break to also enter reset state
                 case RESET:
                 default:
                     state_setup();
@@ -373,7 +381,7 @@ bool home_pivot() {
             pivot_rotate(CCW, PIVOT_SPEED);
             while (pivot_limit());
             pivot_rotate(NEUTRAL, 0);
-            pivot_position = 5.0 / PIVOT_PULSE_RATIO; // Reset encoder counter
+            pivot_position = pivot_offset / PIVOT_PULSE_RATIO; // Reset encoder counter
             delay(100); // Give time to stop before resetting encoder count
         }
         pivot_setAngle(0); // Return pivot to home position
