@@ -46,6 +46,11 @@ class Scheduler:
         self.blend_state_timer = time.time()
         self.pivot_location = 0
 
+    def reset_everything(self):
+       self.blender.send_command(self.bus, 255, 0) 
+       self.carousel.send_command(self.bus, 255, 0) 
+       self.dispense.send_command(self.bus, 255, 0) 
+
     def home_everything(self):
         # Home elevator
         self.blender.send_command(self.bus, 4, 3)
